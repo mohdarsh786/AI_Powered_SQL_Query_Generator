@@ -7,6 +7,22 @@ const jwt = require('jsonwebtoken');
 const supabase = require('../config/db');
 const env = require('../config/env');
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: env.nodeEnv === 'production',
+  sameSite: env.nodeEnv === 'production' ? 'none' : 'lax',
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+  path: '/'
+};
+
+const tempCookieOptions = {
+  httpOnly: true,
+  secure: env.nodeEnv === 'production',
+  sameSite: env.nodeEnv === 'production' ? 'none' : 'lax',
+  maxAge: 15 * 60 * 1000,
+  path: '/'
+};
+
 /**
  * POST /api/auth/login
  * Validates credentials and issues a JWT in an httpOnly cookie. */
@@ -48,13 +64,7 @@ const login = async (req, res, next) => {
         { expiresIn: '15m' }
       );
 
-      res.cookie('temp_token', tempToken, {
-        httpOnly: true,
-        secure: env.nodeEnv === 'production',
-        sameSite: 'lax',
-        maxAge: 15 * 60 * 1000, // 15 minutes
-        path: '/'
-      });
+      res.cookie('temp_token', tempToken, tempCookieOptions);
 
       return res.status(200).json({
         requiresPasswordChange: true,
@@ -74,13 +84,7 @@ const login = async (req, res, next) => {
     });
 
     // Set httpOnly cookie — never return token in response body
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: env.nodeEnv === 'production',
-      sameSite: env.nodeEnv === 'production' ? 'strict' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/',
-    });
+    res.cookie('token', token, cookieOptions);
 
     res.json({
       message: 'Login successful.',
@@ -104,7 +108,7 @@ const logout = async (req, res, next) => {
     res.clearCookie('token', {
       httpOnly: true,
       secure: env.nodeEnv === 'production',
-      sameSite: env.nodeEnv === 'production' ? 'strict' : 'lax',
+      sameSite: env.nodeEnv === 'production' ? 'none' : 'lax',
       path: '/',
     });
 
@@ -184,7 +188,12 @@ const changePassword = async (req, res, next) => {
       return res.status(500).json({ message: 'Failed to update password.' });
     }
 
-    res.clearCookie('temp_token', { path: '/' });
+    res.clearCookie('temp_token', {
+      httpOnly: true,
+      secure: env.nodeEnv === 'production',
+      sameSite: env.nodeEnv === 'production' ? 'none' : 'lax',
+      path: '/'
+    });
 
     const { data: user } = await supabase
       .from('app_users')
@@ -198,13 +207,7 @@ const changePassword = async (req, res, next) => {
       { expiresIn: env.jwt.expiresIn }
     );
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: env.nodeEnv === 'production',
-      sameSite: env.nodeEnv === 'production' ? 'strict' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: '/',
-    });
+    res.cookie('token', token, cookieOptions);
 
     return res.status(200).json({
       success: true,
