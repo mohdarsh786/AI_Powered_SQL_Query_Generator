@@ -8,27 +8,27 @@
 
 [![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Visit_Now-238636?style=for-the-badge)](https://ai-powered-sql-query-generator.vercel.app)
 [![License](https://img.shields.io/badge/License-MIT-a78bfa?style=for-the-badge)](LICENSE)
-[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)](https://react.dev)
-[![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=flat-square&logo=node.js)](https://nodejs.org)
-[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com)
-[![Groq](https://img.shields.io/badge/Groq-LLaMA_3.3_70B-F55036?style=flat-square)](https://groq.com)
-[![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?style=flat-square&logo=vercel)](https://vercel.com)
-[![Render](https://img.shields.io/badge/Render-Deployed-46E3B7?style=flat-square&logo=render)](https://render.com)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)](https://react.dev)
+[![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge&logo=node.js)](https://nodejs.org)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com)
+[![Groq](https://img.shields.io/badge/Groq-LLaMA_3.3_70B-F55036?style=for-the-badge)](https://groq.com)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel)](https://vercel.com)
+[![Render](https://img.shields.io/badge/Render-Deployed-46E3B7?style=for-the-badge&logo=render)](https://render.com)
 
 </div>
 
 ---
 
 
-### 🔑 Demo Credentials
+### Demo Credentials
 
 > All accounts use a **one-time default password**. On first login, the platform forces a mandatory password reset before granting access — an industry-standard security practice.
 
 | Username | Default Password | Role | Access Level |
 |---|---|---|---|
-| `admin_sarah` | `password123` | 👑 Admin | User management, permissions, audit logs |
-| `dba_michael` | `password123` | 🔧 DBA | Full DDL/DML, schema browser, query execution |
-| `user_jessica` | `password123` | 👤 User | SELECT on granted tables, export results |
+| `admin_sarah` | `password123` |  Admin | User management, permissions, audit logs |
+| `dba_michael` | `password123` |  DBA   | Full DDL/DML, schema browser, query execution |
+| `user_jessica` | `password123`|  User  | SELECT on granted tables, export results |
 
 > 💡 To reset accounts to default: run `backend/seed.sql` in your Supabase SQL Editor.
 
