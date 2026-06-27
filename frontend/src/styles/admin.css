@@ -1,0 +1,89 @@
+.glass-panel { 
+  background: rgba(20, 28, 46, 0.6); 
+  backdrop-filter: blur(12px); 
+  border: 1px solid #1e2d45; 
+  border-top: 1px solid rgba(255, 255, 255, 0.05); 
+}
+
+.stat-card-gradient-1 { background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.15), transparent 70%); }
+.stat-card-gradient-2 { background: radial-gradient(circle at top right, rgba(76, 215, 246, 0.15), transparent 70%); }
+.stat-card-gradient-3 { background: radial-gradient(circle at top right, rgba(255, 181, 150, 0.15), transparent 70%); }
+.stat-card-gradient-4 { background: radial-gradient(circle at top right, rgba(255, 180, 171, 0.15), transparent 70%); }
+
+.admin-wrapper {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-base);
+}
+
+.admin-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 32px;
+}
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+  /* FIX: ensure no overflow clipping */
+  overflow: visible;
+}
+
+.stat-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  transition: var(--transition-fast);
+}
+
+.stat-card:hover {
+  border-color: var(--border-accent);
+  box-shadow: var(--glow-blue);
+}
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-action {
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid;
+  transition: var(--transition-fast);
+  background: transparent;
+  white-space: nowrap;
+}
+
+.btn-suspend {
+  color: var(--accent-red);
+  border-color: rgba(244,63,94,0.3);
+}
+.btn-suspend:hover {
+  background: rgba(244,63,94,0.1);
+}
+
+.btn-activate {
+  color: var(--accent-emerald);
+  border-color: rgba(16,185,129,0.3);
+}
+.btn-activate:hover {
+  background: rgba(16,185,129,0.1);
+}
+
+.btn-edit-limit {
+  color: var(--accent-amber);
+  border-color: rgba(245,158,11,0.3);
+}
+.btn-edit-limit:hover {
+  background: rgba(245,158,11,0.1);
+}

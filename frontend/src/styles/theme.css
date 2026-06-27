@@ -1,0 +1,107 @@
+/* ============================================
+   SQL INTELLIGENCE — UNIFIED THEME
+   Single source of truth for all design tokens
+   ============================================ */
+
+
+:root {
+  /* === BACKGROUNDS === */
+  --bg-base:          #0a0e17;
+  --bg-surface:       #0f1623;
+  --bg-elevated:      #141c2e;
+  --bg-overlay:       #1a2236;
+  --bg-hover:         #1e2a3d;
+
+  /* === BORDERS === */
+  --border-default:   #1e2d45;
+  --border-subtle:    #162032;
+  --border-accent:    #2563eb;
+  --border-success:   #10b981;
+  --border-warning:   #f59e0b;
+  --border-danger:    #f43f5e;
+
+  /* === ACCENT COLORS === */
+  --accent-blue:      #2563eb;
+  --accent-cyan:      #06b6d4;
+  --accent-emerald:   #10b981;
+  --accent-purple:    #a78bfa;
+  --accent-amber:     #f59e0b;
+  --accent-red:       #f43f5e;
+
+  /* === TEXT === */
+  --text-primary:     #f0f6ff;
+  --text-secondary:   #94a3b8;
+  --text-muted:       #475569;
+  --text-disabled:    #334155;
+
+  /* === SQL SYNTAX HIGHLIGHTING === */
+  --sql-keyword:      #06b6d4;
+  --sql-function:     #a78bfa;
+  --sql-string:       #f59e0b;
+  --sql-comment:      #475569;
+  --sql-number:       #10b981;
+
+  /* === SEMANTIC === */
+  --success:          #10b981;
+  --warning:          #f59e0b;
+  --danger:           #f43f5e;
+  --info:             #2563eb;
+
+  /* === GRADIENTS === */
+  --gradient-primary:   linear-gradient(135deg, #2563eb, #06b6d4);
+  --gradient-success:   linear-gradient(135deg, #10b981, #06b6d4);
+  --gradient-danger:    linear-gradient(135deg, #f43f5e, #f59e0b);
+  --gradient-hero-text: linear-gradient(90deg, #2563eb, #06b6d4, #10b981);
+  --gradient-card:      linear-gradient(145deg, #0f1623, #141c2e);
+
+  /* === SHADOWS & GLOWS === */
+  --shadow-card:      0 4px 24px rgba(0,0,0,0.4);
+  --shadow-elevated:  0 8px 40px rgba(0,0,0,0.6);
+  --shadow-modal:     0 24px 80px rgba(0,0,0,0.8);
+  --glow-blue:        0 0 30px rgba(37,99,235,0.25);
+  --glow-cyan:        0 0 30px rgba(6,182,212,0.2);
+  --glow-emerald:     0 0 30px rgba(16,185,129,0.2);
+  --glow-red:         0 0 30px rgba(244,63,94,0.2);
+  --glow-amber:       0 0 30px rgba(245,158,11,0.2);
+
+  /* === RADIUS === */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  14px;
+  --radius-xl:  20px;
+  --radius-full: 9999px;
+
+  /* === TYPOGRAPHY === */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* === FONT SIZES === */
+  --text-xs:   11px;
+  --text-sm:   13px;
+  --text-base: 15px;
+  --text-lg:   18px;
+  --text-xl:   24px;
+  --text-2xl:  32px;
+  --text-3xl:  48px;
+  --text-hero: 72px;
+
+  /* === SPACING === */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* === TRANSITIONS === */
+  --transition-fast:   all 0.15s cubic-bezier(0.4,0,0.2,1);
+  --transition-normal: all 0.25s cubic-bezier(0.4,0,0.2,1);
+  --transition-slow:   all 0.4s cubic-bezier(0.4,0,0.2,1);
+
+  /* === LAYOUT === */
+  --navbar-height:  52px;
+  --sidebar-width:  240px;
+  --ai-panel-width: 320px;
+}
