@@ -115,9 +115,9 @@ export default function PermissionControl() {
         <div className="flex flex-col gap-sm">
           <label className="font-label-md text-[12px] font-medium text-on-surface-variant">Select User</label>
           <div className="relative">
-            <User size={18} className="absolute left-3 top-2.5 text-outline" />
+            <User size={18} className="absolute left-3 top-3 text-outline" />
             <select
-              className="w-full bg-[#0a0e17] border border-[#1e2d45] rounded-lg pl-10 pr-4 py-2.5 text-body-md font-body-md text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container/50 outline-none transition-all appearance-none cursor-pointer"
+              className="w-full admin-select pl-10 pr-4 py-2.5 appearance-none cursor-pointer"
               value={selectedUserId}
               onChange={(e) => setSelectedUserId(e.target.value)}
             >
@@ -134,9 +134,9 @@ export default function PermissionControl() {
         <div className="flex flex-col gap-sm">
           <label className="font-label-md text-[12px] font-medium text-on-surface-variant">Select Table</label>
           <div className="relative">
-            <TableProperties size={18} className="absolute left-3 top-2.5 text-outline" />
+            <TableProperties size={18} className="absolute left-3 top-3 text-outline" />
             <select
-              className="w-full bg-[#0a0e17] border border-[#1e2d45] rounded-lg pl-10 pr-4 py-2.5 text-body-md font-body-md text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container/50 outline-none transition-all appearance-none cursor-pointer"
+              className="w-full admin-select pl-10 pr-4 py-2.5 appearance-none cursor-pointer"
               value={selectedTable}
               onChange={(e) => setSelectedTable(e.target.value)}
             >
@@ -205,11 +205,11 @@ export default function PermissionControl() {
                         {p.table_name}
                       </div>
                       <div className="flex gap-2">
-                        {p.can_select && <span className="bg-success/20 text-success border border-success/30 px-2 py-0.5 rounded text-[10px] font-code-md flex items-center gap-1"><Check size={10} /> SELECT</span>}
-                        {p.can_insert && <span className="bg-success/20 text-success border border-success/30 px-2 py-0.5 rounded text-[10px] font-code-md flex items-center gap-1"><Check size={10} /> INSERT</span>}
-                        {p.can_update && <span className="bg-success/20 text-success border border-success/30 px-2 py-0.5 rounded text-[10px] font-code-md flex items-center gap-1"><Check size={10} /> UPDATE</span>}
-                        {p.can_delete && <span className="bg-success/20 text-success border border-success/30 px-2 py-0.5 rounded text-[10px] font-code-md flex items-center gap-1"><Check size={10} /> DELETE</span>}
-                        {p.can_export && <span className="bg-success/20 text-success border border-success/30 px-2 py-0.5 rounded text-[10px] font-code-md flex items-center gap-1"><Check size={10} /> EXPORT</span>}
+                        {p.can_select && <span className="badge badge-success"><Check size={12} /> SELECT</span>}
+                        {p.can_insert && <span className="badge badge-success"><Check size={12} /> INSERT</span>}
+                        {p.can_update && <span className="badge badge-success"><Check size={12} /> UPDATE</span>}
+                        {p.can_delete && <span className="badge badge-success"><Check size={12} /> DELETE</span>}
+                        {p.can_export && <span className="badge badge-success"><Check size={12} /> EXPORT</span>}
                       </div>
                     </div>
                     <button

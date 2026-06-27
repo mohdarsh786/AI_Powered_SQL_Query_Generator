@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
-import { Search, UserPlus, User, PlayCircle, Ban, X } from 'lucide-react'
+import { Search, UserPlus, User, PlayCircle, Ban, X, CheckCircle2 } from 'lucide-react'
 
 export default function UserManagement() {
   const [users, setUsers] = useState([])
@@ -14,9 +14,9 @@ export default function UserManagement() {
   const [newUser, setNewUser] = useState({
     username: '',
     email: '',
-    password: '',
     role: 'user',
   })
+  const [tempPassword, setTempPassword] = useState(null)
   const [creating, setCreating] = useState(false)
 
   const fetchUsers = async () => {
@@ -39,10 +39,9 @@ export default function UserManagement() {
     e.preventDefault()
     setCreating(true)
     try {
-      await api.post('/api/admin/users', newUser)
+      const res = await api.post('/api/admin/users', newUser)
       toast.success('User created successfully')
-      setShowCreateModal(false)
-      setNewUser({ username: '', email: '', password: '', role: 'user' })
+      setTempPassword(res.data.tempPassword)
       fetchUsers()
     } catch (err) {
       toast.error(err.response?.data?.error || 'Failed to create user')
@@ -86,20 +85,20 @@ export default function UserManagement() {
 
   const getRoleBadgeClasses = (role) => {
     switch (role?.toLowerCase()) {
-      case 'admin': return 'bg-error/20 text-error border-error/30'
-      case 'dba': return 'bg-warning/20 text-warning border-warning/30'
-      default: return 'bg-primary-container/20 text-primary-fixed-dim border-primary-container/30'
+      case 'admin': return 'badge badge-admin'
+      case 'dba': return 'badge badge-dba'
+      default: return 'badge badge-user'
     }
   }
 
   return (
-    <div className="flex flex-col flex-1 h-full">
+    <div className="flex flex-col flex-1 h-full px-2">
       {/* Toolbar */}
-      <div className="flex justify-between items-center mb-md shrink-0">
+      <div className="flex justify-between items-center mt-4 mb-6 shrink-0">
         <div className="relative w-64">
-          <Search size={18} className="absolute left-3 top-2 text-outline" />
+          <Search size={18} className="absolute left-3 top-2.5 text-outline" />
           <input
-            className="w-full bg-[#0a0e17] border border-[#1e2d45] rounded-lg pl-10 pr-3 py-1.5 text-body-md font-body-md text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container/50 outline-none transition-all placeholder:text-outline-variant"
+            className="w-full admin-input pl-10 pr-3 py-2 text-[14px]"
             placeholder="Search users..."
             type="text"
             value={searchQuery}
@@ -107,7 +106,7 @@ export default function UserManagement() {
           />
         </div>
         <button
-          className="bg-primary-container text-white font-label-md text-[12px] font-medium px-4 py-2 rounded-lg flex items-center gap-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] hover:bg-inverse-primary transition-colors active:scale-95"
+          className="bg-primary-container text-white font-label-md text-[13px] font-medium px-5 py-2 rounded-full flex items-center gap-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] hover:bg-inverse-primary transition-colors active:scale-95"
           onClick={() => setShowCreateModal(true)}
         >
           <UserPlus size={16} /> Create User
@@ -153,7 +152,7 @@ export default function UserManagement() {
                       </div>
                     </td>
                     <td className="p-sm px-md">
-                      <span className={`px-2 py-0.5 rounded text-[11px] font-label-md border ${getRoleBadgeClasses(u.role)}`}>
+                      <span className={getRoleBadgeClasses(u.role)}>
                         {u.role?.toUpperCase()}
                       </span>
                     </td>
@@ -172,7 +171,7 @@ export default function UserManagement() {
                       <div className="flex items-center gap-2">
                         <input
                           id={`limit-${u.id}`}
-                          className="w-24 bg-[#0a0e17] border border-[#1e2d45] rounded px-2 py-1 text-[13px] text-on-surface focus:border-secondary outline-none transition-colors"
+                          className="admin-input-small"
                           type="number"
                           defaultValue={u.row_limit}
                           onChange={(e) =>
@@ -213,85 +212,152 @@ export default function UserManagement() {
 
       {/* Create User Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-surface-container border border-outline-variant/40 rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center px-lg py-md border-b border-outline-variant/20 bg-surface-container-low">
-              <h2 className="font-h2 text-[20px] font-semibold text-on-surface flex items-center gap-2">
-                <UserPlus size={20} />
-                Create New User
-              </h2>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="text-on-surface-variant hover:text-on-surface transition-colors rounded-full p-1 hover:bg-surface-variant"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            
-            <form onSubmit={handleCreateUser}>
-              <div className="p-lg flex flex-col gap-md">
-                <div className="flex flex-col gap-sm">
-                  <label className="font-label-md text-[12px] font-medium text-on-surface-variant">Username</label>
-                  <input
-                    className="w-full bg-[#0a0e17] border border-[#1e2d45] rounded-lg px-4 py-2 text-[14px] text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container/50 outline-none transition-all"
-                    type="text"
-                    value={newUser.username}
-                    onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="flex flex-col gap-sm">
-                  <label className="font-label-md text-[12px] font-medium text-on-surface-variant">Email</label>
-                  <input
-                    className="w-full bg-[#0a0e17] border border-[#1e2d45] rounded-lg px-4 py-2 text-[14px] text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container/50 outline-none transition-all"
-                    type="email"
-                    value={newUser.email}
-                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="flex flex-col gap-sm">
-                  <label className="font-label-md text-[12px] font-medium text-on-surface-variant">Password</label>
-                  <input
-                    className="w-full bg-[#0a0e17] border border-[#1e2d45] rounded-lg px-4 py-2 text-[14px] text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container/50 outline-none transition-all"
-                    type="password"
-                    value={newUser.password}
-                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                    minLength={8}
-                    required
-                  />
-                </div>
-                <div className="flex flex-col gap-sm">
-                  <label className="font-label-md text-[12px] font-medium text-on-surface-variant">Role</label>
-                  <select
-                    className="w-full bg-[#0a0e17] border border-[#1e2d45] rounded-lg px-4 py-2 text-[14px] text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container/50 outline-none transition-all"
-                    value={newUser.role}
-                    onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+        <div className="modal-overlay">
+          <div className="modal-content animate-in">
+            {!tempPassword ? (
+              <>
+                <div className="flex justify-between items-center px-lg py-md border-b border-outline-variant/20 bg-surface-container-low">
+                  <h2 className="font-h2 text-[20px] font-semibold text-on-surface flex items-center gap-2">
+                    <UserPlus size={20} />
+                    Create New User
+                  </h2>
+                  <button
+                    onClick={() => {
+                      setShowCreateModal(false)
+                      setNewUser({ username: '', email: '', role: 'user' })
+                    }}
+                    className="text-on-surface-variant hover:text-on-surface transition-colors rounded-full p-1 hover:bg-surface-variant"
                   >
-                    <option value="user">User</option>
-                    <option value="dba">DBA</option>
-                    <option value="admin">Admin</option>
-                  </select>
+                    <X size={20} />
+                  </button>
                 </div>
-              </div>
 
-              <div className="px-lg py-md border-t border-outline-variant/20 bg-surface-container-low flex justify-end gap-3">
-                <button
-                  type="button"
-                  className="px-4 py-2 font-label-md text-[13px] font-medium text-on-surface hover:bg-surface-variant rounded-lg transition-colors border border-outline-variant/30"
-                  onClick={() => setShowCreateModal(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-primary-container text-white font-label-md text-[13px] font-medium px-4 py-2 rounded-lg hover:bg-inverse-primary transition-colors disabled:opacity-50"
-                  disabled={creating}
-                >
-                  {creating ? 'Creating...' : 'Create User'}
-                </button>
-              </div>
-            </form>
+                <form onSubmit={handleCreateUser}>
+                  <div className="p-lg flex flex-col gap-md">
+                    <div className="flex flex-col gap-sm">
+                      <label className="font-label-md text-[12px] font-medium text-on-surface-variant">Username</label>
+                      <input
+                        className="w-full admin-input px-4 py-2.5"
+                        type="text"
+                        value={newUser.username}
+                        onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="flex flex-col gap-sm">
+                      <label className="font-label-md text-[12px] font-medium text-on-surface-variant">Email</label>
+                      <input
+                        className="w-full admin-input px-4 py-2.5"
+                        type="email"
+                        value={newUser.email}
+                        onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="flex flex-col gap-sm">
+                      <label className="font-label-md text-[12px] font-medium text-on-surface-variant">Role</label>
+                      <select
+                        className="w-full admin-select px-4 py-2.5"
+                        value={newUser.role}
+                        onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                      >
+                        <option value="user">User</option>
+                        <option value="dba">DBA</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </div>
+
+                    <div className="create-user-notice">
+                      <span>🔒</span>
+                      <span>
+                        A secure one-time password will be generated automatically.
+                        The user must change it on first login.
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="px-lg py-md border-t border-outline-variant/20 bg-surface-container-low flex justify-end gap-3">
+                    <button
+                      type="button"
+                      className="px-4 py-2 font-label-md text-[13px] font-medium text-on-surface hover:bg-surface-variant rounded-lg transition-colors border border-outline-variant/30"
+                      onClick={() => {
+                        setShowCreateModal(false)
+                        setNewUser({ username: '', email: '', role: 'user' })
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="bg-primary-container text-white font-label-md text-[13px] font-medium px-4 py-2 rounded-lg hover:bg-inverse-primary transition-colors disabled:opacity-50"
+                      disabled={creating}
+                    >
+                      {creating ? 'Creating...' : 'Create User'}
+                    </button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <>
+                <div className="flex justify-between items-center px-lg py-md border-b border-outline-variant/20 bg-surface-container-low">
+                  <h2 className="font-h2 text-[20px] font-semibold text-success flex items-center gap-2">
+                    <CheckCircle2 size={20} /> User Created
+                  </h2>
+                  <button
+                    onClick={() => {
+                      setShowCreateModal(false)
+                      setTempPassword(null)
+                      setNewUser({ username: '', email: '', role: 'user' })
+                    }}
+                    className="text-on-surface-variant hover:text-on-surface transition-colors rounded-full p-1 hover:bg-surface-variant"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="p-lg">
+                  <div className="temp-password-box">
+                    <p className="temp-password-label">
+                      🔑 One-Time Password for <strong className="text-on-surface">{newUser.username}</strong>
+                    </p>
+                    <div className="temp-password-value">
+                      {tempPassword}
+                    </div>
+                    <button
+                      className="btn-copy"
+                      onClick={() => {
+                        navigator.clipboard.writeText(tempPassword)
+                        toast.success('Copied to clipboard!')
+                      }}
+                    >
+                      📋 Copy Password
+                    </button>
+                  </div>
+
+                  <div className="temp-password-warning">
+                    <span>⚠</span>
+                    <span>
+                      This password is shown <strong>only once</strong> and cannot be recovered.
+                      Share it securely with the user. They will be required to change it on first login.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="px-lg py-md border-t border-outline-variant/20 bg-surface-container-low flex justify-end gap-3">
+                  <button
+                    type="button"
+                    className="bg-primary-container text-white font-label-md text-[13px] font-medium px-6 py-2 rounded-lg hover:bg-inverse-primary transition-colors"
+                    onClick={() => {
+                      setShowCreateModal(false)
+                      setTempPassword(null)
+                      setNewUser({ username: '', email: '', role: 'user' })
+                    }}
+                  >
+                    Done
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

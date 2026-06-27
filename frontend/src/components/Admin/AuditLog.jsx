@@ -85,7 +85,7 @@ export default function AuditLog() {
     <div className="flex flex-col flex-1 h-full">
       <div className="flex justify-between items-center mb-md shrink-0">
         <h3 className="font-h3 text-[20px] font-semibold text-on-surface">System Audit Logs</h3>
-        <button 
+        <button
           className="bg-surface-container-high border border-outline-variant/50 hover:bg-surface-variant text-on-surface px-4 py-2 rounded-lg transition-all active:scale-95 font-label-md text-[13px] font-medium flex items-center gap-2"
           onClick={fetchLogs}
           disabled={loading}
@@ -204,16 +204,16 @@ export default function AuditLog() {
             Page {page} of {totalPages} <span className="text-outline">({total} total records)</span>
           </span>
           <div className="flex gap-2">
-            <button 
+            <button
               className="bg-[#0a0e17] border border-[#1e2d45] hover:bg-surface-variant text-on-surface px-3 py-1.5 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-label-md text-[12px]"
-              disabled={page <= 1} 
+              disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
               Previous
             </button>
-            <button 
+            <button
               className="bg-[#0a0e17] border border-[#1e2d45] hover:bg-surface-variant text-on-surface px-3 py-1.5 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-label-md text-[12px]"
-              disabled={page >= totalPages} 
+              disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
             >
               Next

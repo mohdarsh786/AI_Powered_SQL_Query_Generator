@@ -11,6 +11,7 @@ const {
   managePermissions,
   getAudit,
   setRowLimit,
+  getStats,
 } = require('../controllers/admin.controller');
 const { authenticate } = require('../middleware/auth');
 const { requireRole } = require('../middleware/rbac');
@@ -35,5 +36,8 @@ router.get('/audit', getAudit);
 
 // PATCH /api/admin/rowlimit/:userId — set row cap for user
 router.patch('/rowlimit/:userId', setRowLimit);
+
+// GET /api/admin/stats — cluster statistics
+router.get('/stats', getStats);
 
 module.exports = router;

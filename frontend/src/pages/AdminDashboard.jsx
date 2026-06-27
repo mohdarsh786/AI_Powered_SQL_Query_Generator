@@ -109,25 +109,22 @@ export default function AdminDashboard() {
           <div className="flex border-b border-outline-variant/30 px-md pt-sm gap-2">
             <button
               onClick={() => setActiveTab('users')}
-              className={`px-md py-sm font-label-md text-[12px] flex items-center gap-2 border-b-2 transition-colors ${
-                activeTab === 'users' ? 'border-secondary text-secondary' : 'border-transparent text-on-surface-variant hover:text-on-surface'
-              }`}
+              className={`px-md py-sm font-label-md text-[12px] flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'users' ? 'border-secondary text-secondary' : 'border-transparent text-on-surface-variant hover:text-on-surface'
+                }`}
             >
               <UserCog size={16} /> Users
             </button>
             <button
               onClick={() => setActiveTab('permissions')}
-              className={`px-md py-sm font-label-md text-[12px] flex items-center gap-2 border-b-2 transition-colors ${
-                activeTab === 'permissions' ? 'border-secondary text-secondary' : 'border-transparent text-on-surface-variant hover:text-on-surface'
-              }`}
+              className={`px-md py-sm font-label-md text-[12px] flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'permissions' ? 'border-secondary text-secondary' : 'border-transparent text-on-surface-variant hover:text-on-surface'
+                }`}
             >
               <KeyRound size={16} /> Permissions
             </button>
             <button
               onClick={() => setActiveTab('audit')}
-              className={`px-md py-sm font-label-md text-[12px] flex items-center gap-2 border-b-2 transition-colors ${
-                activeTab === 'audit' ? 'border-secondary text-secondary' : 'border-transparent text-on-surface-variant hover:text-on-surface'
-              }`}
+              className={`px-md py-sm font-label-md text-[12px] flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'audit' ? 'border-secondary text-secondary' : 'border-transparent text-on-surface-variant hover:text-on-surface'
+                }`}
             >
               <ScrollText size={16} /> Audit Logs
             </button>

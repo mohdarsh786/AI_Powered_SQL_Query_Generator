@@ -7,9 +7,7 @@
 ### AI-Powered SQL Query Generator with Enterprise-Grade Security
 
 [![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Visit_Now-238636?style=for-the-badge)](https://ai-powered-sql-query-generator.vercel.app)
-[![Backend API](https://img.shields.io/badge/⚡_Backend_API-Render-2563eb?style=for-the-badge)](https://ai-powered-sql-query-generator-b1jz.onrender.com)
 [![License](https://img.shields.io/badge/License-MIT-a78bfa?style=for-the-badge)](LICENSE)
-
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)](https://react.dev)
 [![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=flat-square&logo=node.js)](https://nodejs.org)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com)
@@ -21,14 +19,6 @@
 
 ---
 
-## 🚀 Live Demo
-
-> **⚡ First load may take 30 seconds** — Render free tier spins down after inactivity.
-
-| Resource | URL |
-|---|---|
-| 🌐 **Frontend** | https://ai-powered-sql-query-generator.vercel.app |
-| ⚙️ **Backend API** | https://ai-powered-sql-query-generator-b1jz.onrender.com |
 
 ### 🔑 Demo Credentials
 
@@ -44,31 +34,13 @@
 
 ---
 
-## 📸 Screenshots
-
-<div align="center">
-
-| Landing Page | User Dashboard |
-|---|---|
-| ![Landing](https://via.placeholder.com/400x250/0a0e17/06b6d4?text=Landing+Page) | ![Dashboard](https://via.placeholder.com/400x250/0a0e17/2563eb?text=User+Dashboard) |
-
-| AI Assistant | Admin Panel |
-|---|---|
-| ![AI](https://via.placeholder.com/400x250/0a0e17/a78bfa?text=AI+Assistant) | ![Admin](https://via.placeholder.com/400x250/0a0e17/f43f5e?text=Admin+Dashboard) |
-
-</div>
-
-> 📌 Replace placeholder images with real screenshots of your deployment!
-
----
-
-## ✨ Features
+##  Features
 
 <table>
 <tr>
 <td width="50%">
 
-### 🧠 AI-Powered Query Generation
+###  AI-Powered Query Generation
 - Natural language → optimized SQL
 - Up to 3 query variants per request
 - Dialect-aware (PostgreSQL / MySQL)
@@ -78,7 +50,7 @@
 </td>
 <td width="50%">
 
-### 🔍 Schema-Aware Intelligence
+###  Schema-Aware Intelligence
 - Auto-fetches schema via INFORMATION_SCHEMA
 - AI receives DDL only — **zero row data**
 - Table relationships and index awareness
@@ -90,7 +62,7 @@
 <tr>
 <td width="50%">
 
-### 🛡️ Enterprise Security (10 Layers)
+###  Enterprise Security (10 Layers)
 - JWT in httpOnly cookies
 - Role-based route guards (frontend + backend)
 - Rate limiting — 10 req/min on query routes
@@ -105,7 +77,7 @@
 </td>
 <td width="50%">
 
-### 👥 Role-Based Access Control
+###  Role-Based Access Control
 - **Admin** — User management, permissions, audit logs
 - **DBA** — Full DDL/DML, schema browser, execution plans
 - **User** — Scoped SELECT, export, row-capped results
@@ -118,7 +90,7 @@
 <tr>
 <td width="50%">
 
-### ⚡ Monaco SQL Editor
+###  Monaco SQL Editor
 - Syntax highlighting with custom dark theme
 - SQL keyword colorization (cyan/purple/amber)
 - Ctrl+Enter to execute
@@ -128,7 +100,7 @@
 </td>
 <td width="50%">
 
-### 📊 Live Query Execution
+###  Live Query Execution
 - Execute against live Supabase database
 - Paginated results table (50 rows/page)
 - Execution time and row count stats
@@ -174,7 +146,7 @@
 
 ---
 
-## 🔐 Security Architecture
+##  Security Architecture
 
 ```
 User Request
@@ -219,7 +191,7 @@ User Request
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 | Layer | Technology | Purpose |
 |---|---|---|
@@ -240,7 +212,7 @@ User Request
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 AI_Powered_SQL_Query_Generator/
@@ -270,7 +242,7 @@ AI_Powered_SQL_Query_Generator/
 
 ---
 
-## 🚀 Local Development
+##  Local Development
 
 ### Prerequisites
 
@@ -338,7 +310,7 @@ VITE_API_URL=http://localhost:5000
 
 ---
 
-## 🔑 First Login Security Flow
+##  First Login Security Flow
 
 ```
 User logs in with default password (password123)
@@ -367,7 +339,7 @@ User logs in with default password (password123)
 
 ## 👥 Role Permissions
 
-| Permission | 👑 Admin | 🔧 DBA | 👤 User |
+| Permission |  Admin | DBA |  User |
 |---|---|---|---|
 | SELECT queries | ✗ | ✓ | ✓ (granted tables) |
 | INSERT / UPDATE | ✗ | ✓ | ✓ (if granted) |
@@ -382,7 +354,7 @@ User logs in with default password (password123)
 
 ---
 
-## 🗺️ Security Roadmap
+##  Security Roadmap
 
 > Features planned for v2.0:
 
@@ -402,10 +374,6 @@ MIT License — see [LICENSE](LICENSE) for details.
 ---
 
 <div align="center">
-
-Built with ♥ for **TCS-693 Full Stack Web Development**
-
-**Graphic Era University | 2026**
 
 [![Made with React](https://img.shields.io/badge/Made_with-React-61DAFB?style=flat-square&logo=react)](https://react.dev)
 [![Powered by Groq](https://img.shields.io/badge/Powered_by-Groq_LLaMA-F55036?style=flat-square)](https://groq.com)

@@ -29,14 +29,15 @@ const listUsers = async (req, res, next) => {
 
 /**
  * POST /api/admin/users
- * Creates a new user. Password is hashed with bcryptjs. */
+ * Creates a new user. Generates a one-time password and forces reset.
+ */
 const createUser = async (req, res, next) => {
   try {
-    const { username, email, password, role } = req.body;
+    const { username, email, role } = req.body;
 
-    if (!username || !email || !password || !role) {
+    if (!username || !email || !role) {
       return res.status(400).json({
-        error: 'Username, email, password, and role are required.',
+        error: 'Username, email and role are required.',
       });
     }
 
@@ -46,11 +47,20 @@ const createUser = async (req, res, next) => {
       });
     }
 
-    if (password.length < 8) {
-      return res.status(400).json({
-        error: 'Password must be at least 8 characters long.',
-      });
-    }
+    // Generate a random one-time password
+    const generateTempPassword = () => {
+      const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#$!';
+      let password = '';
+      for (let i = 0; i < 12; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return password;
+    };
+
+    const tempPassword = generateTempPassword();
+    const bcrypt = require('bcryptjs');
+    const salt = await bcrypt.genSalt(12);
+    const passwordHash = await bcrypt.hash(tempPassword, salt);
 
     // Check for duplicate username or email
     const { data: existing } = await supabase
@@ -65,10 +75,6 @@ const createUser = async (req, res, next) => {
       });
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(12);
-    const passwordHash = await bcrypt.hash(password, salt);
-
     const { data: newUser, error } = await supabase
       .from('app_users')
       .insert({
@@ -76,6 +82,7 @@ const createUser = async (req, res, next) => {
         email,
         password_hash: passwordHash,
         role,
+        requires_password_change: true,
         is_suspended: false,
         row_limit: 500,
       })
@@ -89,7 +96,11 @@ const createUser = async (req, res, next) => {
       return res.status(500).json({ error: 'Failed to create user.' });
     }
 
-    res.status(201).json({ message: 'User created successfully.', user: newUser });
+    res.status(201).json({ 
+      message: 'User created successfully.', 
+      user: newUser,
+      tempPassword
+    });
   } catch (err) {
     next(err);
   }
@@ -247,4 +258,45 @@ const setRowLimit = async (req, res, next) => {
   }
 };
 
-module.exports = { listUsers, createUser, toggleSuspend, managePermissions, getAudit, setRowLimit };
+/**
+ * GET /api/admin/stats
+ * Returns high-level cluster statistics.
+ */
+const getStats = async (req, res, next) => {
+  try {
+    // 1. Total users
+    const { count: usersCount, error: usersError } = await supabase
+      .from('app_users')
+      .select('id', { count: 'exact', head: true });
+
+    // 2. Queries today
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const { count: queriesCount, error: queriesError } = await supabase
+      .from('audit_logs')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', startOfDay.toISOString());
+
+    // 3. Flagged ops (failed or unauthorized)
+    const { count: flaggedCount, error: flaggedError } = await supabase
+      .from('audit_logs')
+      .select('id', { count: 'exact', head: true })
+      .not('reason', 'is', null);
+
+    if (usersError || queriesError || flaggedError) {
+      return res.status(500).json({ error: 'Failed to fetch cluster stats.' });
+    }
+
+    res.json({
+      users: usersCount || 0,
+      sessions: Math.max(1, Math.floor((usersCount || 1) / 2)), // Mocking active sessions based on user count
+      queriesToday: queriesCount || 0,
+      flagged: flaggedCount || 0
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { listUsers, createUser, toggleSuspend, managePermissions, getAudit, setRowLimit, getStats };
