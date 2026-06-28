@@ -6,11 +6,12 @@ export default function DBASidebar({
   activeSessions,
   onTableClick,
   onHistoryClick,
+  onSessionsClick,
   mode,
-  setMode
+  setMode,
+  onGrantClick
 }) {
   const [expandedTables, setExpandedTables] = useState({})
-  const [showGrantModal, setShowGrantModal] = useState(false)
 
   const toggleTable = (tableName) => {
     setExpandedTables((prev) => ({ ...prev, [tableName]: !prev[tableName] }))
@@ -79,7 +80,7 @@ export default function DBASidebar({
       {/* Active sessions — expanded info */}
       <div className="dba-sidebar-section">
         <p className="dba-section-label">ACTIVE SESSIONS</p>
-        <div className="dba-sessions-card">
+        <div className="dba-sessions-card" onClick={onSessionsClick} style={{ cursor: 'pointer' }}>
           <div className="dba-sessions-count">{activeSessions}</div>
           <div className="dba-sessions-info">
             <span className="dba-sessions-dot" />
@@ -142,7 +143,7 @@ export default function DBASidebar({
 
       {/* Grant permissions button */}
       <div className="dba-sidebar-footer">
-        <button className="btn-grant-permissions" onClick={() => setShowGrantModal(true)}>
+        <button className="btn-grant-permissions" onClick={() => onGrantClick && onGrantClick()}>
           ⊕ Grant User Permissions
         </button>
       </div>

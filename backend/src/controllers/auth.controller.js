@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const supabase = require('../config/db');
 const env = require('../config/env');
+const sessionEvents = require('../services/sessionEvents');
 
 const cookieOptions = {
   httpOnly: true,
@@ -86,6 +87,24 @@ const login = async (req, res, next) => {
     // Set httpOnly cookie — never return token in response body
     res.cookie('token', token, cookieOptions);
 
+    // Track active session
+    const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('active_sessions')
+      .insert({
+        user_id: user.id,
+        username: user.username,
+        role: user.role,
+        ip_address: ipAddress
+      })
+      .select('id')
+      .single();
+
+    if (!sessionError && sessionData) {
+      res.cookie('session_id', sessionData.id, cookieOptions);
+      sessionEvents.emit('change');
+    }
+
     res.json({
       message: 'Login successful.',
       user: {
@@ -105,7 +124,21 @@ const login = async (req, res, next) => {
  * Clears the JWT cookie. */
 const logout = async (req, res, next) => {
   try {
+    const sessionId = req.cookies?.session_id;
+
+    if (sessionId) {
+      await supabase.from('active_sessions').delete().eq('id', sessionId);
+      sessionEvents.emit('change');
+    }
+
     res.clearCookie('token', {
+      httpOnly: true,
+      secure: env.nodeEnv === 'production',
+      sameSite: env.nodeEnv === 'production' ? 'none' : 'lax',
+      path: '/',
+    });
+    
+    res.clearCookie('session_id', {
       httpOnly: true,
       secure: env.nodeEnv === 'production',
       sameSite: env.nodeEnv === 'production' ? 'none' : 'lax',
@@ -160,14 +193,14 @@ const changePassword = async (req, res, next) => {
 
     const tempToken = req.cookies?.temp_token;
     if (!tempToken) {
-      return res.status(401).json({ message: 'Session expired. Please login again.' });
+      return res.status(403).json({ message: 'Session expired. Please login again.' });
     }
 
     let decoded;
     try {
       decoded = jwt.verify(tempToken, env.jwt.secret);
     } catch (e) {
-      return res.status(401).json({ message: 'Session expired. Please login again.' });
+      return res.status(403).json({ message: 'Session expired. Please login again.' });
     }
 
     if (decoded.purpose !== 'password_change') {
@@ -208,6 +241,24 @@ const changePassword = async (req, res, next) => {
     );
 
     res.cookie('token', token, cookieOptions);
+
+    // Track active session
+    const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('active_sessions')
+      .insert({
+        user_id: user.id,
+        username: user.username,
+        role: user.role,
+        ip_address: ipAddress
+      })
+      .select('id')
+      .single();
+
+    if (!sessionError && sessionData) {
+      res.cookie('session_id', sessionData.id, cookieOptions);
+      sessionEvents.emit('change');
+    }
 
     return res.status(200).json({
       success: true,

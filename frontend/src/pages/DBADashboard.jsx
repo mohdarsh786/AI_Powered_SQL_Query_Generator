@@ -32,6 +32,9 @@ export default function DBADashboard() {
   const [tables, setTables] = useState([])
   const [queryHistory, setQueryHistory] = useState([])
   const [activeSessions, setActiveSessions] = useState(0)
+  const [showSessionsModal, setShowSessionsModal] = useState(false)
+  const [sessionsList, setSessionsList] = useState([])
+  const [fetchingSessions, setFetchingSessions] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [executing, setExecuting] = useState(false)
   const [mode, setMode] = useState('query') // 'query' | 'schema'
@@ -57,12 +60,11 @@ export default function DBADashboard() {
   const [grantSuccess, setGrantSuccess] = useState('')
   const [granting, setGranting] = useState(false)
 
-  // Fetch users when modal opens
   useEffect(() => {
     if (showGrantModal) {
-      api.get('/api/admin/users')
-        .then(res => setUsers(res.data.filter(u => u.role === 'user')))
-        .catch(() => {})
+      api.get('/api/dba/users')
+        .then(res => setUsers(res.data.users.filter(u => u.role === 'user')))
+        .catch(() => { })
     }
   }, [showGrantModal])
 
@@ -132,10 +134,10 @@ export default function DBADashboard() {
   // Initialize Split.js
   useEffect(() => {
     let hSplit, vSplit;
-    
+
     const initSplit = setTimeout(() => {
       if (mode !== 'query') return;
-      
+
       if (document.querySelector('.split-left') && document.querySelector('.split-right')) {
         hSplit = Split(['.split-left', '.split-right'], {
           sizes: [70, 30],
@@ -173,13 +175,30 @@ export default function DBADashboard() {
   useEffect(() => {
     fetchSchema()
     fetchHistory()
-    fetchSessions()
 
-    const intervalId = setInterval(() => {
-      fetchSessions()
-    }, 30000)
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+    const eventSource = new EventSource(`${baseUrl}/api/dba/sessions/live`, {
+      withCredentials: true
+    })
 
-    return () => clearInterval(intervalId)
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        if (data && typeof data.count === 'number') {
+          setActiveSessions(data.count)
+        }
+      } catch (err) {
+        console.error('Failed to parse SSE data', err)
+      }
+    }
+
+    eventSource.onerror = (err) => {
+      console.error('SSE Error:', err)
+    }
+
+    return () => {
+      eventSource.close()
+    }
   }, [])
 
   useEffect(() => {
@@ -213,12 +232,16 @@ export default function DBADashboard() {
     }
   }
 
-  const fetchSessions = async () => {
+  const handleSessionsClick = async () => {
+    setShowSessionsModal(true)
+    setFetchingSessions(true)
     try {
       const res = await api.get('/api/dba/sessions')
-      setActiveSessions(res.data.activeCount || 0)
+      setSessionsList(res.data.sessions || [])
     } catch {
-      // non-critical
+      toast.error('Failed to load sessions list')
+    } finally {
+      setFetchingSessions(false)
     }
   }
 
@@ -379,7 +402,7 @@ export default function DBADashboard() {
   return (
     <div className="dashboard-wrapper">
       <Navbar user={user} />
-      
+
       <div className="dashboard-body">
         <aside className="dashboard-sidebar" style={{ border: 'none', background: 'transparent', padding: 0 }}>
           <DBASidebar
@@ -388,6 +411,8 @@ export default function DBADashboard() {
             activeSessions={activeSessions}
             onTableClick={handleTableClick}
             onHistoryClick={handleHistoryClick}
+            onSessionsClick={handleSessionsClick}
+            onGrantClick={() => setShowGrantModal(true)}
             mode={mode}
             setMode={setMode}
           />
@@ -411,62 +436,62 @@ export default function DBADashboard() {
           ) : (
             /* Query Mode Split Container */
             <div className="flex-1 overflow-hidden relative flex">
-              
-                <div className="dashboard-main split-left" style={{ flex: 1 }}>
-                  {/* NL Prompt Bar Area */}
-                  <div className="nl-prompt-bar">
-                    <input 
-                      className="nl-input" 
-                      placeholder="Describe your query... e.g. 'Show salary breakdown by department'" 
-                      type="text"
-                      value={naturalLanguage}
-                      onChange={(e) => setNaturalLanguage(e.target.value)}
-                      onKeyDown={handleNLKeyDown}
-                      disabled={generating}
-                    />
-                    <button 
-                      className="btn-generate"
-                      onClick={handleGenerate}
-                      disabled={generating || !naturalLanguage.trim()}
-                    >
-                      {generating ? 'Generating...' : 'Generate'}
-                    </button>
-                    <button 
-                      className="btn-run"
-                      onClick={handleRun}
-                      disabled={executing}
-                    >
-                      {executing ? 'Running...' : 'Run'}
-                    </button>
-                  </div>
 
-                  <div id="editor-pane" className="split-top relative flex flex-col">
-                    <div className="editor-toolbar shrink-0">
-                      <div className="editor-toolbar-left">
-                        <span className="editor-label">SQL EDITOR</span>
-                        <span className="dba-mode-indicator">
-                          ⊞ DBA Mode — Full Access
-                        </span>
-                      </div>
-                      <div className="editor-toolbar-right">
-                        {isDestructiveQuery(editorQuery) && (
-                          <span className="destructive-warning">
-                            ⚠ Destructive operation detected
-                          </span>
-                        )}
-                        <span className="kbd">Ctrl+Enter</span>
-                        <span className="editor-hint">to run</span>
-                      </div>
+              <div className="dashboard-main split-left" style={{ flex: 1 }}>
+                {/* NL Prompt Bar Area */}
+                <div className="nl-prompt-bar">
+                  <input
+                    className="nl-input"
+                    placeholder="Describe your query... e.g. 'Show salary breakdown by department'"
+                    type="text"
+                    value={naturalLanguage}
+                    onChange={(e) => setNaturalLanguage(e.target.value)}
+                    onKeyDown={handleNLKeyDown}
+                    disabled={generating}
+                  />
+                  <button
+                    className="btn-generate"
+                    onClick={handleGenerate}
+                    disabled={generating || !naturalLanguage.trim()}
+                  >
+                    {generating ? 'Generating...' : 'Generate'}
+                  </button>
+                  <button
+                    className="btn-run"
+                    onClick={handleRun}
+                    disabled={executing}
+                  >
+                    {executing ? 'Running...' : 'Run'}
+                  </button>
+                </div>
+
+                <div id="editor-pane" className="split-top relative flex flex-col">
+                  <div className="editor-toolbar shrink-0">
+                    <div className="editor-toolbar-left">
+                      <span className="editor-label">SQL EDITOR</span>
+                      <span className="dba-mode-indicator">
+                        ⊞ DBA Mode — Full Access
+                      </span>
                     </div>
-                    <div className="flex-1 relative min-h-0">
-                      <MonacoEditor
-                        value={editorQuery}
-                        onChange={setEditorQuery}
-                        onRun={handleRun}
-                        editorRef={editorRef}
-                      />
+                    <div className="editor-toolbar-right">
+                      {isDestructiveQuery(editorQuery) && (
+                        <span className="destructive-warning">
+                          ⚠ Destructive operation detected
+                        </span>
+                      )}
+                      <span className="kbd">Ctrl+Enter</span>
+                      <span className="editor-hint">to run</span>
                     </div>
                   </div>
+                  <div className="flex-1 relative min-h-0">
+                    <MonacoEditor
+                      value={editorQuery}
+                      onChange={setEditorQuery}
+                      onRun={handleRun}
+                      editorRef={editorRef}
+                    />
+                  </div>
+                </div>
                 <div id="results-pane" className="split-bottom relative">
                   <ResultsPanel
                     results={results}
@@ -488,7 +513,7 @@ export default function DBADashboard() {
                   onImport={handleImport}
                 />
               </div>
-              
+
             </div>
           )}
         </div>
@@ -503,14 +528,14 @@ export default function DBADashboard() {
                 <AlertTriangle size={20} />
                 Destructive Operation
               </h2>
-              <button 
+              <button
                 onClick={() => setShowConfirm(false)}
                 className="text-on-surface-variant hover:text-on-surface transition-colors rounded-full p-1 hover:bg-surface-variant"
               >
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="p-lg flex flex-col gap-md">
               <div className="bg-error-container/10 border border-error/30 rounded-lg p-3 flex gap-3 items-start">
                 <AlertCircle size={18} className="text-error mt-0.5 shrink-0" />
@@ -539,7 +564,7 @@ export default function DBADashboard() {
             </div>
 
             <div className="px-lg py-md border-t border-outline-variant/20 bg-surface-container-highest flex justify-end gap-3">
-              <button 
+              <button
                 className="px-4 py-2 font-label-md text-[13px] font-medium text-on-surface hover:bg-surface-variant rounded-lg transition-colors border border-outline-variant/30"
                 onClick={() => setShowConfirm(false)}
               >
@@ -557,18 +582,22 @@ export default function DBADashboard() {
         </div>
       )}
       {showGrantModal && (
-        <div className="modal-overlay" onClick={() => setShowGrantModal(false)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>⊕ Grant User Permissions</h3>
-              <button className="modal-close" onClick={() => setShowGrantModal(false)}>✕</button>
+        <div className="grant-modal-overlay" onClick={() => setShowGrantModal(false)}>
+          <div className="grant-modal-card" onClick={e => e.stopPropagation()}>
+            <div className="grant-modal-header">
+              <h2 className="grant-modal-title">
+                ⊕ Grant User Permissions
+              </h2>
+              <button className="grant-modal-close" onClick={() => setShowGrantModal(false)}>
+                <X size={20} />
+              </button>
             </div>
 
-            <div className="modal-body">
-              <div className="form-group">
-                <label className="form-label">Select User</label>
+            <div className="grant-modal-body">
+              <div className="grant-form-group">
+                <label className="grant-form-label">Select User</label>
                 <select
-                  className="form-input"
+                  className="grant-form-select"
                   value={grantForm.userId}
                   onChange={e => setGrantForm(f => ({ ...f, userId: e.target.value }))}
                 >
@@ -579,10 +608,10 @@ export default function DBADashboard() {
                 </select>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Select Table</label>
+              <div className="grant-form-group">
+                <label className="grant-form-label">Select Table</label>
                 <select
-                  className="form-input"
+                  className="grant-form-select"
                   value={grantForm.tableName}
                   onChange={e => setGrantForm(f => ({ ...f, tableName: e.target.value }))}
                 >
@@ -593,34 +622,47 @@ export default function DBADashboard() {
                 </select>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Permissions</label>
-                <div className="permission-toggles">
-                  {['can_select','can_insert','can_update','can_delete','can_export'].map(perm => (
+              <div className="grant-form-group">
+                <label className="grant-form-label">Permissions</label>
+                <div className="grant-permission-box permission-toggles">
+                  {['can_select', 'can_insert', 'can_update', 'can_delete', 'can_export'].map(perm => (
                     <label key={perm} className="permission-toggle-item">
                       <input
                         type="checkbox"
                         checked={grantForm[perm]}
                         onChange={e => setGrantForm(f => ({ ...f, [perm]: e.target.checked }))}
                       />
-                      <span className={`perm-label perm-${perm.replace('can_','')}`}>
-                        {perm.replace('can_','').toUpperCase()}
+                      <span className={`perm-label perm-${perm.replace('can_', '')}`}>
+                        {perm.replace('can_', '').toUpperCase()}
                       </span>
                     </label>
                   ))}
                 </div>
               </div>
 
-              {grantError && <div className="modal-error">⚠ {grantError}</div>}
-              {grantSuccess && <div className="modal-success">✓ {grantSuccess}</div>}
+              {grantError && (
+                <div className="ai-error-card" style={{ padding: '10px' }}>
+                  <AlertCircle size={16} />
+                  <span>{grantError}</span>
+                </div>
+              )}
+              
+              {grantSuccess && (
+                <div className="modal-success" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>✓ {grantSuccess}</span>
+                </div>
+              )}
             </div>
 
-            <div className="modal-footer">
-              <button className="btn-ghost" onClick={() => setShowGrantModal(false)}>
+            <div className="grant-modal-footer">
+              <button
+                className="grant-btn-ghost"
+                onClick={() => setShowGrantModal(false)}
+              >
                 Cancel
               </button>
               <button
-                className="btn-primary"
+                className="grant-btn-primary"
                 onClick={handleGrantPermission}
                 disabled={granting || !grantForm.userId || !grantForm.tableName}
               >
@@ -630,6 +672,59 @@ export default function DBADashboard() {
           </div>
         </div>
       )}
+
+      {/* Active Sessions Modal */}
+      {showSessionsModal && (
+        <div className="modal-overlay" onClick={() => setShowSessionsModal(false)}>
+          <div className="modal-card" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>👥 Active Sessions</h3>
+              <button className="modal-close" onClick={() => setShowSessionsModal(false)}>✕</button>
+            </div>
+
+            <div className="modal-body">
+              {fetchingSessions ? (
+                <div className="flex justify-center py-8">
+                  <div className="spinner spinner-md"></div>
+                </div>
+              ) : sessionsList.length === 0 ? (
+                <div className="text-center text-outline-variant py-8">
+                  No active sessions found.
+                </div>
+              ) : (
+                <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
+                  {sessionsList.map(session => (
+                    <div key={session.id} className="dba-session-item">
+                      <div className="dba-session-left">
+                        <div className="dba-session-user">
+                          {session.username}
+                          <span className={`dba-session-role ${session.role}`}>
+                            {session.role}
+                          </span>
+                        </div>
+                        <div className="dba-session-meta">
+                          IP: {session.ip_address || 'Unknown'}
+                        </div>
+                      </div>
+                      <div className="dba-session-right">
+                        <div className="dba-session-meta">Joined: {new Date(session.created_at).toLocaleTimeString()}</div>
+                        <div className="dba-session-meta">Last seen: {new Date(session.last_seen).toLocaleTimeString()}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer border-t border-outline-variant/20 pt-4 mt-4">
+              <button className="btn-ghost w-full" onClick={() => setShowSessionsModal(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

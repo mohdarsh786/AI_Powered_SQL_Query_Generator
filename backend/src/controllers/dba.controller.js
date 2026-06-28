@@ -3,6 +3,7 @@
  */
 
 const supabase = require('../config/db');
+const sessionEvents = require('../services/sessionEvents');
 
 
 /**
@@ -60,37 +61,17 @@ const grantPermission = async (req, res, next) => {
 
 /**
  * GET /api/dba/sessions
- * Returns active sessions (approximated via recent audit log activity). */
+ * Returns actual active sessions from the active_sessions table. */
 const getActiveSessions = async (req, res, next) => {
   try {
-    // Get distinct users who have had activity in the last 30 minutes
-    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-
-    const { data: recentActivity, error } = await supabase
-      .from('audit_logs')
-      .select('user_id, username, role, ip_address, created_at')
-      .gte('created_at', thirtyMinutesAgo)
-      .order('created_at', { ascending: false });
+    const { data: sessions, error } = await supabase
+      .from('active_sessions')
+      .select('id, user_id, username, role, ip_address, created_at, last_seen')
+      .order('last_seen', { ascending: false });
 
     if (error) {
       return res.status(500).json({ error: 'Failed to fetch session data.' });
     }
-
-    // Deduplicate by user_id, keeping the most recent entry
-    const sessionMap = new Map();
-    for (const entry of recentActivity || []) {
-      if (!sessionMap.has(entry.user_id)) {
-        sessionMap.set(entry.user_id, {
-          userId: entry.user_id,
-          username: entry.username,
-          role: entry.role,
-          ipAddress: entry.ip_address,
-          lastActivity: entry.created_at,
-        });
-      }
-    }
-
-    const sessions = Array.from(sessionMap.values());
 
     res.json({ sessions, activeCount: sessions.length });
   } catch (err) {
@@ -98,4 +79,42 @@ const getActiveSessions = async (req, res, next) => {
   }
 };
 
-module.exports = { grantPermission, getActiveSessions };
+/**
+ * GET /api/dba/sessions/live
+ * SSE endpoint for live active sessions count.
+ */
+const streamActiveSessions = async (req, res) => {
+  // Set headers for SSE
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders(); // flush the headers to establish SSE connection
+
+  const sendCount = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('active_sessions')
+        .select('*', { count: 'exact', head: true });
+        
+      if (!error) {
+        res.write(`data: ${JSON.stringify({ count })}\n\n`);
+      }
+    } catch (err) {
+      console.error('[SSE] Error fetching active sessions count:', err);
+    }
+  };
+
+  // Send initial count immediately
+  await sendCount();
+
+  // Listen for changes from login/logout/cleanup
+  sessionEvents.on('change', sendCount);
+
+  // Cleanup on connection close
+  req.on('close', () => {
+    sessionEvents.off('change', sendCount);
+    res.end();
+  });
+};
+
+module.exports = { grantPermission, getActiveSessions, streamActiveSessions };

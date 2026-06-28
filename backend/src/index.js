@@ -7,8 +7,9 @@ const helmet = require('helmet');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const env = require('./config/env');
-const { authLimiter, queryLimiter, generalLimiter } = require('./middleware/rateLimiter');
+const { queryLimiter, generalLimiter } = require('./middleware/rateLimiter');
 const { errorHandler } = require('./middleware/errorHandler');
+const { startSessionCleanupJob } = require('./jobs/sessionCleanup');
 
 // Route imports
 const authRoutes = require('./routes/auth.routes');
@@ -56,8 +57,8 @@ app.get('/api/health', (req, res) => {
 
 // ── API Routes with Rate Limiters ────────────────────────────────────
 
-// 3a. Auth routes: 5 requests/minute per IP
-app.use('/api/auth', authLimiter, authRoutes);
+// 3a. Auth routes: general rate limit (login/password endpoints have custom strict limiters)
+app.use('/api/auth', generalLimiter, authRoutes);
 
 // 3b. Query routes: 10 requests/minute per IP
 app.use('/api/query', queryLimiter, queryRoutes);
@@ -85,6 +86,9 @@ app.use(errorHandler);
 // ── Start Server ─────────────────────────────────────────────────────
 
 const PORT = env.port;
+
+// Start background jobs
+startSessionCleanupJob();
 
 app.listen(PORT, () => {
   console.log(`\n🚀 SQL Intelligence Platform API running on port ${PORT}`);

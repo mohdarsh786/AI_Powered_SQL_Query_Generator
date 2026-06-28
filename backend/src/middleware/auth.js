@@ -53,6 +53,18 @@ const authenticate = async (req, res, next) => {
       row_limit: user.row_limit,
     };
 
+    // Heartbeat: Update last_seen asynchronously
+    const sessionId = req.cookies?.session_id;
+    if (sessionId) {
+      supabase
+        .from('active_sessions')
+        .update({ last_seen: new Date().toISOString() })
+        .eq('id', sessionId)
+        .then(({ error }) => {
+          if (error) console.error('[Heartbeat] Error updating last_seen:', error.message);
+        });
+    }
+
     next();
   } catch (err) {
     next(err);

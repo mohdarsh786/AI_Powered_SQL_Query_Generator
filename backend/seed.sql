@@ -400,3 +400,17 @@ $$;
 -- Default credentials (all accounts):
 --   Password: password123
 
+
+-- -----------------------------------------------------------------------------
+-- 9. ACTIVE SESSIONS TABLE (For SSE Tracking)
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS active_sessions (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES app_users(id) ON DELETE CASCADE,
+  username VARCHAR(100),
+  role VARCHAR(20),
+  ip_address VARCHAR(45),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  last_seen TIMESTAMPTZ DEFAULT NOW()
+);

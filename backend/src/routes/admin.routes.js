@@ -13,6 +13,7 @@ const {
   setRowLimit,
   getStats,
 } = require('../controllers/admin.controller');
+const { getActiveSessions, streamActiveSessions } = require('../controllers/dba.controller');
 const { authenticate } = require('../middleware/auth');
 const { requireRole } = require('../middleware/rbac');
 
@@ -39,5 +40,11 @@ router.patch('/rowlimit/:userId', setRowLimit);
 
 // GET /api/admin/stats — cluster statistics
 router.get('/stats', getStats);
+
+// GET /api/admin/sessions — active sessions list
+router.get('/sessions', getActiveSessions);
+
+// GET /api/admin/sessions/live — SSE stream for active sessions count
+router.get('/sessions/live', streamActiveSessions);
 
 module.exports = router;
