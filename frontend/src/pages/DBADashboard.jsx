@@ -10,7 +10,9 @@ import DBASidebar from '../components/Sidebar/DBASidebar'
 import MonacoEditor from '../components/Editor/MonacoEditor'
 import ResultsPanel from '../components/Editor/ResultsPanel'
 import AIAssistantPanel from '../components/AIAssistant/AIAssistantPanel'
+import SchemaVisualizer from '../components/SchemaVisualizer/SchemaVisualizer'
 import '../styles/dashboard.css'
+import './DBADashboard.css'
 
 const DESTRUCTIVE_OPS = ['DELETE', 'DROP', 'TRUNCATE']
 
@@ -38,6 +40,87 @@ export default function DBADashboard() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [confirmReason, setConfirmReason] = useState('')
   const [pendingQuery, setPendingQuery] = useState('')
+
+  // Grant Permissions modal state
+  const [showGrantModal, setShowGrantModal] = useState(false)
+  const [grantForm, setGrantForm] = useState({
+    userId: '',
+    tableName: '',
+    can_select: false,
+    can_insert: false,
+    can_update: false,
+    can_delete: false,
+    can_export: false
+  })
+  const [users, setUsers] = useState([])
+  const [grantError, setGrantError] = useState('')
+  const [grantSuccess, setGrantSuccess] = useState('')
+  const [granting, setGranting] = useState(false)
+
+  // Fetch users when modal opens
+  useEffect(() => {
+    if (showGrantModal) {
+      api.get('/api/admin/users')
+        .then(res => setUsers(res.data.filter(u => u.role === 'user')))
+        .catch(() => {})
+    }
+  }, [showGrantModal])
+
+  const handleGrantPermission = async () => {
+    setGrantError('')
+    setGrantSuccess('')
+    if (!grantForm.userId || !grantForm.tableName) {
+      setGrantError('Please select a user and a table.')
+      return
+    }
+    setGranting(true)
+    try {
+      await api.post('/api/dba/permissions', {
+        userId: parseInt(grantForm.userId),
+        tableName: grantForm.tableName,
+        permissions: {
+          can_select: grantForm.can_select,
+          can_insert: grantForm.can_insert,
+          can_update: grantForm.can_update,
+          can_delete: grantForm.can_delete,
+          can_export: grantForm.can_export
+        }
+      })
+      setGrantSuccess(`Permissions granted on ${grantForm.tableName}`)
+    } catch (err) {
+      setGrantError(err.response?.data?.message || err.response?.data?.error || 'Failed to grant permission.')
+    } finally {
+      setGranting(false)
+    }
+  }
+
+  // Parse schema text to array of table objects for UI components
+  const parseSchema = useCallback((schemaStr) => {
+    if (!schemaStr) return []
+    const parsed = []
+    const tableRegex = /CREATE TABLE (\w+)\s*\(([\s\S]*?)\);/gi
+    let match
+    while ((match = tableRegex.exec(schemaStr)) !== null) {
+      const tableName = match[1]
+      const columnsStr = match[2]
+      const columns = []
+      const lines = columnsStr.split(',\n')
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (!trimmed) continue
+        const parts = trimmed.split(/\s+/)
+        if (parts.length >= 2) {
+          const typeStr = parts[1].toLowerCase()
+          const isPrimary = trimmed.toUpperCase().includes('PRIMARY KEY')
+          const isForeign = trimmed.toUpperCase().includes('REFERENCES')
+          columns.push({ name: parts[0], type: typeStr, isPrimary, isForeign })
+        }
+      }
+      parsed.push({ name: tableName, columns })
+    }
+    return parsed
+  }, [])
+  const parsedSchema = parseSchema(schema)
 
   // Debounce
   const debouncedQuery = useDebounce(editorQuery, 3000)
@@ -91,6 +174,12 @@ export default function DBADashboard() {
     fetchSchema()
     fetchHistory()
     fetchSessions()
+
+    const intervalId = setInterval(() => {
+      fetchSessions()
+    }, 30000)
+
+    return () => clearInterval(intervalId)
   }, [])
 
   useEffect(() => {
@@ -238,6 +327,7 @@ export default function DBADashboard() {
       })
       setResultsError(null)
       fetchHistory()
+      fetchSessions()
     } catch (err) {
       const msg = err.response?.data?.error || 'Query execution failed'
       if (err.response?.status === 403) {
@@ -291,42 +381,32 @@ export default function DBADashboard() {
       <Navbar user={user} />
       
       <div className="dashboard-body">
-        <aside className="dashboard-sidebar">
+        <aside className="dashboard-sidebar" style={{ border: 'none', background: 'transparent', padding: 0 }}>
           <DBASidebar
             schemaData={schema}
             queryHistory={queryHistory}
             activeSessions={activeSessions}
             onTableClick={handleTableClick}
             onHistoryClick={handleHistoryClick}
+            mode={mode}
+            setMode={setMode}
           />
         </aside>
 
         {/* Main Content Area */}
         <div className="dashboard-main">
-          
-          {/* Mode Toggle (Tabs) */}
-          <div className="px-4 py-2 border-b border-outline-variant/30 bg-surface-container-low shrink-0 flex items-center gap-4">
-            <button
-              onClick={() => setMode('query')}
-              className={`font-label-md text-[12px] font-medium pb-1 border-b-2 transition-colors ${mode === 'query' ? 'text-secondary border-secondary' : 'text-on-surface-variant hover:text-on-surface border-transparent'}`}
-            >
-              Query Mode
-            </button>
-            <button
-              onClick={() => setMode('schema')}
-              className={`font-label-md text-[12px] font-medium pb-1 border-b-2 transition-colors ${mode === 'schema' ? 'text-secondary border-secondary' : 'text-on-surface-variant hover:text-on-surface border-transparent'}`}
-            >
-              Schema Mode
-            </button>
-          </div>
 
           {mode === 'schema' ? (
             /* Schema Mode */
-            <div className="flex-1 overflow-auto p-lg">
-              <h3 className="font-h3 text-[20px] font-semibold text-on-surface mb-md">Database Schema</h3>
-              <pre className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-md font-code-md text-[13px] text-secondary whitespace-pre-wrap overflow-auto shadow-inner">
-                {schema || 'Loading schema...'}
-              </pre>
+            <div className="schema-mode-container">
+              <div className="schema-mode-header">
+                <h3>Database Schema</h3>
+                <span className="schema-table-count">{parsedSchema.length} tables</span>
+                <span className="schema-hint">Drag tables • Scroll to zoom • Hold to pan</span>
+              </div>
+              <div className="schema-visualizer-wrapper">
+                <SchemaVisualizer schema={parsedSchema} />
+              </div>
             </div>
           ) : (
             /* Query Mode Split Container */
@@ -360,20 +440,32 @@ export default function DBADashboard() {
                     </button>
                   </div>
 
-                  <div id="editor-pane" className="split-top relative">
-                    <div className="absolute top-4 right-4 flex gap-2 z-10">
-                      <div className="bg-surface/80 backdrop-blur border border-outline-variant/30 text-on-surface-variant px-2 py-1.5 rounded flex items-center justify-center font-code-sm text-[11px] gap-2">
-                        <span className="text-secondary">DBA Mode</span>
-                        <span className="w-px h-3 bg-outline-variant/50"></span>
-                        <span>Ctrl+Enter to Run</span>
+                  <div id="editor-pane" className="split-top relative flex flex-col">
+                    <div className="editor-toolbar shrink-0">
+                      <div className="editor-toolbar-left">
+                        <span className="editor-label">SQL EDITOR</span>
+                        <span className="dba-mode-indicator">
+                          ⊞ DBA Mode — Full Access
+                        </span>
+                      </div>
+                      <div className="editor-toolbar-right">
+                        {isDestructiveQuery(editorQuery) && (
+                          <span className="destructive-warning">
+                            ⚠ Destructive operation detected
+                          </span>
+                        )}
+                        <span className="kbd">Ctrl+Enter</span>
+                        <span className="editor-hint">to run</span>
                       </div>
                     </div>
-                    <MonacoEditor
-                      value={editorQuery}
-                      onChange={setEditorQuery}
-                      onRun={handleRun}
-                      editorRef={editorRef}
-                    />
+                    <div className="flex-1 relative min-h-0">
+                      <MonacoEditor
+                        value={editorQuery}
+                        onChange={setEditorQuery}
+                        onRun={handleRun}
+                        editorRef={editorRef}
+                      />
+                    </div>
                   </div>
                 <div id="results-pane" className="split-bottom relative">
                   <ResultsPanel
@@ -459,6 +551,80 @@ export default function DBADashboard() {
                 disabled={!confirmReason.trim()}
               >
                 Execute Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showGrantModal && (
+        <div className="modal-overlay" onClick={() => setShowGrantModal(false)}>
+          <div className="modal-card" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>⊕ Grant User Permissions</h3>
+              <button className="modal-close" onClick={() => setShowGrantModal(false)}>✕</button>
+            </div>
+
+            <div className="modal-body">
+              <div className="form-group">
+                <label className="form-label">Select User</label>
+                <select
+                  className="form-input"
+                  value={grantForm.userId}
+                  onChange={e => setGrantForm(f => ({ ...f, userId: e.target.value }))}
+                >
+                  <option value="">-- Select a user --</option>
+                  {users.map(u => (
+                    <option key={u.id} value={u.id}>{u.username} ({u.email})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Select Table</label>
+                <select
+                  className="form-input"
+                  value={grantForm.tableName}
+                  onChange={e => setGrantForm(f => ({ ...f, tableName: e.target.value }))}
+                >
+                  <option value="">-- Select a table --</option>
+                  {parsedSchema.map(t => (
+                    <option key={t.name} value={t.name}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Permissions</label>
+                <div className="permission-toggles">
+                  {['can_select','can_insert','can_update','can_delete','can_export'].map(perm => (
+                    <label key={perm} className="permission-toggle-item">
+                      <input
+                        type="checkbox"
+                        checked={grantForm[perm]}
+                        onChange={e => setGrantForm(f => ({ ...f, [perm]: e.target.checked }))}
+                      />
+                      <span className={`perm-label perm-${perm.replace('can_','')}`}>
+                        {perm.replace('can_','').toUpperCase()}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {grantError && <div className="modal-error">⚠ {grantError}</div>}
+              {grantSuccess && <div className="modal-success">✓ {grantSuccess}</div>}
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-ghost" onClick={() => setShowGrantModal(false)}>
+                Cancel
+              </button>
+              <button
+                className="btn-primary"
+                onClick={handleGrantPermission}
+                disabled={granting || !grantForm.userId || !grantForm.tableName}
+              >
+                {granting ? 'Granting...' : 'Grant Permissions'}
               </button>
             </div>
           </div>

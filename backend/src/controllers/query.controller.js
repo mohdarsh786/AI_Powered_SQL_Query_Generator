@@ -107,7 +107,9 @@ const execute = async (req, res, next) => {
 
     const executionTime = Date.now() - startTime;
 
-    if (error) {
+    if (error || (data && !Array.isArray(data) && data.error)) {
+      const errMsg = error ? error.message : data.error;
+
       // Log the failed query attempt
       logQuery({
         userId: user.id,
@@ -119,12 +121,12 @@ const execute = async (req, res, next) => {
         rowsAffected: 0,
         executionTimeMs: executionTime,
         ipAddress: req.ip,
-        reason: `Error: ${error.message}`,
+        reason: `Error: ${errMsg}`,
       });
 
       return res.status(400).json({
-        error: 'Query execution failed.',
-        details: error.message,
+        error: errMsg,
+        details: errMsg,
       });
     }
 

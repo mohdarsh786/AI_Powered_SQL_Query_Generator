@@ -188,9 +188,9 @@ $$;
 -- All passwords are bcrypt hash of 'password123' (cost factor 12) (for testing purpose only)
 
 INSERT INTO app_users (username, email, password_hash, role, is_suspended, row_limit, requires_password_change) VALUES
-  ('admin_sarah', 'sarah.admin@sqlplatform.com', '$2a$12$LJ3b5JzDN0qKeGWY8eO.UO6wRBFG3KFOR5ZKN5g7lX2aHtFwzp8Xm', 'admin', FALSE, 500, TRUE),
-  ('dba_michael', 'michael.dba@sqlplatform.com', '$2a$12$LJ3b5JzDN0qKeGWY8eO.UO6wRBFG3KFOR5ZKN5g7lX2aHtFwzp8Xm', 'dba', FALSE, 500, TRUE),
-  ('user_jessica', 'jessica.user@sqlplatform.com', '$2a$12$LJ3b5JzDN0qKeGWY8eO.UO6wRBFG3KFOR5ZKN5g7lX2aHtFwzp8Xm', 'user', FALSE, 500, TRUE)
+  ('admin_sarah', 'sarah.admin@sqlplatform.com', '$2a$12$QK14cPUqxgTl1BTy2/E7YecUHyYZ4X8t1JFHF6B8IW90Dp8575Esi', 'admin', FALSE, 500, TRUE),
+  ('dba_michael', 'michael.dba@sqlplatform.com', '$2a$12$QK14cPUqxgTl1BTy2/E7YecUHyYZ4X8t1JFHF6B8IW90Dp8575Esi', 'dba', FALSE, 500, TRUE),
+  ('user_jessica', 'jessica.user@sqlplatform.com', '$2a$12$QK14cPUqxgTl1BTy2/E7YecUHyYZ4X8t1JFHF6B8IW90Dp8575Esi', 'user', FALSE, 500, TRUE)
 ON CONFLICT (username) DO NOTHING;
 
 -- ─────────────────────────────────────────────────────────────────────────────

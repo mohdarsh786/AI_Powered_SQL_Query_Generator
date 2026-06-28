@@ -3,57 +3,60 @@
  */
 
 const supabase = require('../config/db');
-const { grantPermission } = require('../services/permission.service');
+
 
 /**
  * POST /api/dba/permissions
  * DBA grants user-level permissions on specific tables (only to 'user' role). */
-const grantUserPermission = async (req, res, next) => {
+const grantPermission = async (req, res, next) => {
   try {
-    const { userId, tableName, canSelect, canInsert, canUpdate, canDelete, canExport } = req.body;
+    const { userId, tableName, permissions } = req.body
 
-    if (!userId || !tableName) {
-      return res.status(400).json({
-        error: 'userId and tableName are required.',
-      });
+    if (!userId || !tableName || !permissions) {
+      return res.status(400).json({ message: 'userId, tableName and permissions are required.' })
     }
 
-    // DBA can only grant to users with 'user' role
-    const { data: targetUser, error: userError } = await supabase
+    // Verify target user exists and is 'user' role only
+    const { data: targetUser } = await supabase
       .from('app_users')
       .select('id, role')
       .eq('id', userId)
-      .single();
+      .single()
 
-    if (userError || !targetUser) {
-      return res.status(404).json({ error: 'Target user not found.' });
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User not found.' })
     }
 
     if (targetUser.role !== 'user') {
-      return res.status(400).json({
-        error: 'DBA can only grant permissions to accounts with "user" role.',
-      });
+      return res.status(403).json({ message: 'DBA can only grant permissions to User role accounts.' })
     }
 
-    const permission = await grantPermission({
-      userId,
-      tableName,
-      canSelect: canSelect || false,
-      canInsert: canInsert || false,
-      canUpdate: canUpdate || false,
-      canDelete: canDelete || false,
-      canExport: canExport || false,
-      grantedBy: req.user.id,
-    });
+    // Upsert permission
+    const { error } = await supabase
+      .from('user_permissions')
+      .upsert({
+        user_id: userId,
+        table_name: tableName,
+        can_select: permissions.can_select || false,
+        can_insert: permissions.can_insert || false,
+        can_update: permissions.can_update || false,
+        can_delete: permissions.can_delete || false,
+        can_export: permissions.can_export || false,
+        granted_by: req.user.id
+      }, {
+        onConflict: 'user_id,table_name'
+      })
 
-    res.json({ message: 'Permission granted successfully.', permission });
+    if (error) {
+      return res.status(500).json({ message: 'Failed to grant permission.' })
+    }
+
+    return res.status(200).json({ success: true, message: `Permissions updated for ${tableName}` })
+
   } catch (err) {
-    if (err.statusCode) {
-      return res.status(err.statusCode).json({ error: err.message });
-    }
-    next(err);
+    next(err)
   }
-};
+}
 
 /**
  * GET /api/dba/sessions
@@ -95,4 +98,4 @@ const getActiveSessions = async (req, res, next) => {
   }
 };
 
-module.exports = { grantUserPermission, getActiveSessions };
+module.exports = { grantPermission, getActiveSessions };
