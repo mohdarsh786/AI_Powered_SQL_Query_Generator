@@ -44,6 +44,7 @@ const generate = async (req, res, next) => {
         userId: user.id,
         username: user.username,
         role: user.role,
+        orgId: user.orgId,
         queryType: 'AI_GENERATION',
         tablesUsed: [],
         queryText: naturalLanguage,
@@ -58,6 +59,7 @@ const generate = async (req, res, next) => {
     // Save to query history
     await supabase.from('query_history').insert({
       user_id: user.id,
+      org_id: user.orgId,
       natural_language: naturalLanguage,
       generated_query: result.optimizedQuery,
       executed: false
@@ -115,6 +117,7 @@ const execute = async (req, res, next) => {
         userId: user.id,
         username: user.username,
         role: user.role,
+        orgId: user.orgId,
         queryType: parsed.operation?.toUpperCase() || 'UNKNOWN',
         tablesUsed: parsed.tables || [],
         queryText: finalQuery,
@@ -137,6 +140,7 @@ const execute = async (req, res, next) => {
       userId: user.id,
       username: user.username,
       role: user.role,
+      orgId: user.orgId,
       queryType: parsed.operation?.toUpperCase() || 'UNKNOWN',
       tablesUsed: parsed.tables || [],
       queryText: finalQuery,
@@ -214,6 +218,7 @@ const history = async (req, res, next) => {
       .from('query_history')
       .select('*', { count: 'exact' })
       .eq('user_id', user.id)
+      .eq('org_id', user.orgId)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 

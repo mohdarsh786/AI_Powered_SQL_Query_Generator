@@ -20,7 +20,7 @@ const grantPermission = async (req, res, next) => {
     // Verify target user exists and is 'user' role only
     const { data: targetUser } = await supabase
       .from('app_users')
-      .select('id, role')
+      .select('id, role, org_id')
       .eq('id', userId)
       .single()
 
@@ -30,6 +30,11 @@ const grantPermission = async (req, res, next) => {
 
     if (targetUser.role !== 'user') {
       return res.status(403).json({ message: 'DBA can only grant permissions to User role accounts.' })
+    }
+
+    // Ensure target user belongs to same org
+    if (targetUser.org_id !== req.user.orgId) {
+      return res.status(403).json({ message: 'Cannot manage permissions for users outside your organisation.' })
     }
 
     // Upsert permission
@@ -43,7 +48,8 @@ const grantPermission = async (req, res, next) => {
         can_update: permissions.can_update || false,
         can_delete: permissions.can_delete || false,
         can_export: permissions.can_export || false,
-        granted_by: req.user.id
+        granted_by: req.user.id,
+        org_id: req.user.orgId
       }, {
         onConflict: 'user_id,table_name'
       })

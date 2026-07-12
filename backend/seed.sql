@@ -414,3 +414,77 @@ CREATE TABLE IF NOT EXISTS active_sessions (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   last_seen TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 14. ORGANISATION-BASED MULTI-TENANCY
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- Organisations table
+CREATE TABLE IF NOT EXISTS organisations (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  slug VARCHAR(100) UNIQUE NOT NULL,
+  allowed_domain VARCHAR(255) UNIQUE NOT NULL,
+  created_by INTEGER,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Pending registrations (deleted after OTP verified)
+CREATE TABLE IF NOT EXISTS pending_registrations (
+  id SERIAL PRIMARY KEY,
+  full_name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  org_name VARCHAR(255) NOT NULL,
+  org_slug VARCHAR(100) NOT NULL,
+  allowed_domain VARCHAR(255) NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  otp VARCHAR(6) NOT NULL,
+  otp_expires_at TIMESTAMPTZ NOT NULL,
+  attempts INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Add org_id to app_users
+ALTER TABLE app_users 
+ADD COLUMN IF NOT EXISTS org_id INTEGER REFERENCES organisations(id);
+
+ALTER TABLE app_users
+ADD COLUMN IF NOT EXISTS full_name VARCHAR(255);
+
+-- Add org_id to related tables
+ALTER TABLE user_permissions 
+ADD COLUMN IF NOT EXISTS org_id INTEGER REFERENCES organisations(id);
+
+ALTER TABLE audit_logs 
+ADD COLUMN IF NOT EXISTS org_id INTEGER REFERENCES organisations(id);
+
+ALTER TABLE query_history 
+ADD COLUMN IF NOT EXISTS org_id INTEGER REFERENCES organisations(id);
+
+-- Create demo organisation for existing seed accounts
+INSERT INTO organisations (name, slug, allowed_domain, created_at)
+VALUES ('Demo Organisation', 'demo-org', 'sqlplatform.com', NOW())
+ON CONFLICT (slug) DO NOTHING;
+
+-- Assign existing users to demo org
+UPDATE app_users 
+SET org_id = (SELECT id FROM organisations WHERE slug = 'demo-org')
+WHERE username IN ('admin_sarah', 'dba_michael', 'user_jessica')
+AND org_id IS NULL;
+
+-- Update user_permissions with org_id
+UPDATE user_permissions up
+SET org_id = (SELECT id FROM organisations WHERE slug = 'demo-org')
+WHERE org_id IS NULL;
+
+-- Password Reset Tokens Table
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES app_users(id) ON DELETE CASCADE,
+  email VARCHAR(255) NOT NULL,
+  otp VARCHAR(6) NOT NULL,
+  otp_expires_at TIMESTAMPTZ NOT NULL,
+  attempts INTEGER DEFAULT 0,
+  used BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);

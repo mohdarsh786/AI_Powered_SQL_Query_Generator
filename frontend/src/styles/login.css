@@ -236,3 +236,33 @@
   color: var(--text-muted);
   margin-top: 16px;
 }
+
+.login-footer-links {
+  text-align: center;
+  margin-top: 12px;
+}
+
+.forgot-password-link {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: var(--transition-fast);
+}
+
+.forgot-password-link:hover { color: var(--accent-blue); }
+
+/* Mobile Responsiveness */
+@media (max-width: 968px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+  
+  .login-left {
+    display: none;
+  }
+  
+  .login-right {
+    padding: 24px;
+    background: var(--bg-surface);
+  }
+}

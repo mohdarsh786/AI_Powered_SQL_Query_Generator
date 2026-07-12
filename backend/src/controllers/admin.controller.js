@@ -15,6 +15,7 @@ const listUsers = async (req, res, next) => {
     const { data: users, error } = await supabase
       .from('app_users')
       .select('id, username, email, role, is_suspended, row_limit, created_at')
+      .eq('org_id', req.user.orgId)
       .order('created_at', { ascending: true });
 
     if (error) {
@@ -85,6 +86,7 @@ const createUser = async (req, res, next) => {
         requires_password_change: true,
         is_suspended: false,
         row_limit: 500,
+        org_id: req.user.orgId,
       })
       .select('id, username, email, role, is_suspended, row_limit, created_at')
       .single();
@@ -125,12 +127,17 @@ const toggleSuspend = async (req, res, next) => {
     // Fetch current status
     const { data: user, error: fetchError } = await supabase
       .from('app_users')
-      .select('id, is_suspended')
+      .select('id, is_suspended, org_id')
       .eq('id', userId)
       .single();
 
     if (fetchError || !user) {
       return res.status(404).json({ error: 'User not found.' });
+    }
+
+    // Ensure user belongs to same org
+    if (user.org_id !== req.user.orgId) {
+      return res.status(403).json({ error: 'Not authorized to manage this user.' });
     }
 
     // Toggle suspension
@@ -267,7 +274,8 @@ const getStats = async (req, res, next) => {
     // 1. Total users
     const { count: usersCount, error: usersError } = await supabase
       .from('app_users')
-      .select('id', { count: 'exact', head: true });
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', req.user.orgId);
 
     // 2. Queries today
     const startOfDay = new Date();
@@ -276,12 +284,14 @@ const getStats = async (req, res, next) => {
     const { count: queriesCount, error: queriesError } = await supabase
       .from('audit_logs')
       .select('id', { count: 'exact', head: true })
+      .eq('org_id', req.user.orgId)
       .gte('created_at', startOfDay.toISOString());
 
     // 3. Flagged ops (failed or unauthorized)
     const { count: flaggedCount, error: flaggedError } = await supabase
       .from('audit_logs')
       .select('id', { count: 'exact', head: true })
+      .eq('org_id', req.user.orgId)
       .not('reason', 'is', null);
 
     if (usersError || queriesError || flaggedError) {

@@ -13,6 +13,7 @@ function logQuery(logEntry) {
     user_id: logEntry.userId,
     username: logEntry.username,
     role: logEntry.role,
+    org_id: logEntry.orgId || null,
     query_type: logEntry.queryType,
     tables_used: logEntry.tablesUsed || [],
     query_text: logEntry.queryText,

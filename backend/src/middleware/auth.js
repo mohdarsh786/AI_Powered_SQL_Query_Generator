@@ -31,7 +31,7 @@ const authenticate = async (req, res, next) => {
     // Verify user still exists and is not suspended
     const { data: user, error } = await supabase
       .from('app_users')
-      .select('id, username, email, role, is_suspended, row_limit')
+      .select('id, username, email, role, is_suspended, row_limit, org_id')
       .eq('id', decoded.id)
       .single();
 
@@ -51,6 +51,7 @@ const authenticate = async (req, res, next) => {
       email: user.email,
       role: user.role,
       row_limit: user.row_limit,
+      orgId: user.org_id,
     };
 
     // Heartbeat: Update last_seen asynchronously

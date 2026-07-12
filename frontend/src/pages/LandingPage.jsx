@@ -121,15 +121,14 @@ export default function LandingPage() {
         <div className="landing-nav-inner">
           <div className="landing-logo">SQL Intel</div>
 
-          <div className="landing-nav-links">
-            <button onClick={() => scrollTo('features')}>Features</button>
-            <button onClick={() => scrollTo('security')}>Security</button>
-            <button onClick={() => scrollTo('roles')}>Roles</button>
+          <div className="landing-nav-actions">
+            <button className="landing-btn-signin" onClick={() => navigate('/login')}>
+              Sign In
+            </button>
+            <button className="landing-btn-primary landing-btn-nav-register" onClick={() => navigate('/register')}>
+              Get Started →
+            </button>
           </div>
-
-          <button className="landing-btn-signin" onClick={() => navigate('/login')}>
-            Sign In →
-          </button>
         </div>
       </nav>
 
@@ -153,11 +152,11 @@ export default function LandingPage() {
           </p>
 
           <div className="landing-hero-ctas">
-            <button className="landing-btn-primary" onClick={() => navigate('/login')}>
-              Start Querying Now
+            <button className="landing-btn-primary" onClick={() => navigate('/register')}>
+              Get Started →
             </button>
-            <button className="landing-btn-ghost" onClick={() => scrollTo('features')}>
-              View Features
+            <button className="landing-btn-ghost" onClick={() => navigate('/login')}>
+              Sign In
             </button>
           </div>
 

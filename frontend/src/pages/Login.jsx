@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import api from '../services/api'
 import '../styles/login.css'
@@ -117,9 +117,14 @@ export default function Login() {
             <button className="btn-login" type="submit" disabled={loading}>
               {loading ? 'Signing in...' : 'Sign In →'}
             </button>
+            <div className="login-footer-links">
+              <Link to="/forgot-password" className="forgot-password-link">
+                Forgot your password?
+              </Link>
+            </div>
           </form>
           <p className="login-footer-note">
-            Accounts are managed by your administrator
+            Don't have an account? <a href="/register" style={{ color: 'var(--accent-blue)', textDecoration: 'none' }}>Create an organisation</a>
           </p>
         </div>
       </div>
