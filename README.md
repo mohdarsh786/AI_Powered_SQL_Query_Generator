@@ -62,17 +62,15 @@
 <tr>
 <td width="50%">
 
-###  Enterprise Security (10 Layers)
+###  Enterprise Security
 - JWT in httpOnly cookies
-- Role-based route guards (frontend + backend)
-- Rate limiting — 10 req/min on query routes
-- SQL injection prevention via node-sql-parser
+- Role-based route guards
+- Rate limiting — 10 req/min
+- SQL injection prevention
 - Schema-only AI access
-- Row limit injection per user
 - Append-only audit logs
-- Helmet.js security headers
-- CORS whitelist
-- Error sanitization
+- Brevo OTP Verification
+- Multi-tenant Organisation Isolation
 
 </td>
 <td width="50%">
@@ -81,6 +79,8 @@
 - **Admin** — User management, permissions, audit logs
 - **DBA** — Full DDL/DML, schema browser, execution plans
 - **User** — Scoped SELECT, export, row-capped results
+- Self-serve Organisation Registration
+- Secure OTP-based Forgot Password Flow
 - Force password change on first login
 - Session invalidation by Admin
 - Per-table, per-operation permission grants
@@ -358,9 +358,7 @@ User logs in with default password (password123)
 
 > Features planned for v2.0:
 
-- **Organisation Multi-tenancy** — Isolated workspaces per organisation with invite-based onboarding
 - **Email Invitations** — Admin sends invite links via Brevo, users self-register
-- **OTP Email Verification** — TOTP-based account verification on registration
 - **Query Scheduling** — Schedule recurring queries with result notifications
 - **Real-time Collaboration** — Multiple users editing queries simultaneously
 - **OAuth Integration** — Google/GitHub SSO support
