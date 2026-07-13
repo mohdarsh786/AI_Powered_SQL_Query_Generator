@@ -82,6 +82,7 @@
 - Self-serve Organisation Registration
 - Secure OTP-based Forgot Password Flow
 - Force password change on first login
+- Admin email delivery of temporary user credentials
 - Session invalidation by Admin
 - Per-table, per-operation permission grants
 
@@ -208,6 +209,7 @@ User Request
 | **SQL Parser** | node-sql-parser | Query validation |
 | **Security** | Helmet.js + CORS | HTTP hardening |
 | **Rate Limiting** | express-rate-limit | Abuse prevention |
+| **Email** | Brevo API | Transactional emails (OTP, resets, credentials) |
 | **Deployment** | Vercel + Render | Frontend + Backend hosting |
 
 ---
@@ -300,6 +302,8 @@ SUPABASE_ANON_KEY=your_anon_key
 JWT_SECRET=your_jwt_secret_min_32_chars
 JWT_EXPIRES_IN=7d
 GROQ_API_KEY=your_groq_api_key
+BREVO_API_KEY=your_brevo_api_key
+BREVO_FROM_EMAIL=noreply@yourdomain.com
 ```
 
 **Frontend `.env`:**
@@ -358,7 +362,7 @@ User logs in with default password (password123)
 
 > Features planned for v2.0:
 
-- **Email Invitations** — Admin sends invite links via Brevo, users self-register
+- **SSO / SAML** — Enterprise single sign-on integration
 - **Query Scheduling** — Schedule recurring queries with result notifications
 - **Real-time Collaboration** — Multiple users editing queries simultaneously
 - **OAuth Integration** — Google/GitHub SSO support

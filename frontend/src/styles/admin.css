@@ -58,13 +58,12 @@
 }
 
 .actions-cell {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+  /* Removed flex from td directly, now using wrapper div in React */
 }
 
 .btn-action {
-  padding: 4px 12px;
+  height: 32px;
+  padding: 0 12px;
   border-radius: var(--radius-sm);
   font-size: 12px;
   font-weight: 500;
@@ -73,6 +72,9 @@
   transition: var(--transition-fast);
   background: transparent;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-suspend {
@@ -192,6 +194,7 @@
   outline: none;
   transition: all 0.2s ease;
   font-size: 14px;
+  padding: 8px 12px;
   backdrop-filter: blur(8px);
 }
 
@@ -211,7 +214,8 @@
   transition: all 0.2s ease;
   font-size: 13px;
   backdrop-filter: blur(8px);
-  padding: 6px 10px;
+  height: 32px;
+  padding: 0 10px;
   width: 90px;
   text-align: center;
 }
@@ -363,4 +367,265 @@
 .admin-session-meta {
   font-size: 12px;
   color: var(--text-muted);
+}
+
+/* ── Delete User Button ── */
+.btn-delete {
+  color: var(--accent-red);
+  border-color: rgba(244, 63, 94, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 26px;
+  padding: 0;
+  border-radius: 6px;
+  opacity: 0.6;
+  transition: opacity 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-delete:hover {
+  background: rgba(244, 63, 94, 0.12);
+  border-color: rgba(244, 63, 94, 0.5);
+  opacity: 1;
+}
+
+/* ── Delete Confirm Button ── */
+.btn-delete-confirm {
+  padding: 8px 18px;
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.9), rgba(220, 38, 38, 0.9));
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid rgba(244, 63, 94, 0.5);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 0 0 rgba(244, 63, 94, 0);
+}
+
+.btn-delete-confirm:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 1), rgba(220, 38, 38, 1));
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.4);
+}
+
+.btn-delete-confirm:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── Delete Warning Banner ── */
+.delete-warning-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(244, 63, 94, 0.07);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  border-radius: 10px;
+  font-size: 12px;
+  color: #fb7185;
+  line-height: 1.6;
+}
+
+/* ── Delete User Info Card ── */
+.delete-user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(10, 14, 23, 0.5);
+  border: 1px solid #1e2d45;
+  border-radius: 10px;
+}
+
+/* ── 3D & MacOS Animations ── */
+@keyframes macOS-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.7) translateY(40px) perspective(1200px) rotateX(15deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0) perspective(1200px) rotateX(0deg);
+  }
+}
+
+.mac-modal-enter {
+  animation: macOS-pop-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: center bottom;
+}
+
+@keyframes macOS-pop-out {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0) perspective(1200px) rotateX(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.7) translateY(40px) perspective(1200px) rotateX(15deg);
+  }
+}
+
+.mac-modal-exit {
+  animation: macOS-pop-out 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: center bottom;
+}
+
+/* ── Floating 3D Cards ── */
+.card-3d-hover {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+  transform-style: preserve-3d;
+}
+
+.card-3d-hover:hover {
+  transform: translateY(-6px) scale(1.02) perspective(1000px) rotateX(2deg) rotateY(-2deg);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5), 0 0 24px rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+/* ── Pill Navigation ── */
+.pill-nav {
+  display: inline-flex;
+  background: rgba(10, 14, 23, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px;
+  border-radius: 9999px;
+  backdrop-filter: blur(12px);
+  gap: 4px;
+}
+
+.pill-nav-item {
+  padding: 8px 20px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--on-surface-variant);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.pill-nav-item.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--primary-container), #1d4ed8);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.pill-nav-item:hover:not(.active) {
+  color: var(--on-surface);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ── 3D Tab Slide ── */
+.perspective-container {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes tab-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateZ(-80px) rotateY(-5deg) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateZ(0) rotateY(0) translateY(0);
+  }
+}
+
+.tab-pane-enter {
+  animation: tab-slide-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* Modern Data Grid */
+.modern-grid-row {
+  transition: all 0.3s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.modern-grid-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+  transform: translateX(4px);
+}
+
+/* ── Side Panels & 3D Recess ── */
+.dashboard-wrapper {
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.6s ease;
+  transform-style: preserve-3d;
+  background-color: var(--bg-base);
+  min-height: 100vh;
+}
+
+.dashboard-recess {
+  transform: scale(0.95) translateZ(-50px) rotateY(-1deg) translateX(-10px);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 0 50px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+
+.sliding-panel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(6px);
+}
+
+.sliding-panel {
+  width: 100%;
+  max-width: 500px;
+  height: 100vh;
+  background: rgba(10, 14, 23, 0.75);
+  backdrop-filter: blur(24px) saturate(180%);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.6), inset 1px 0 0 rgba(255,255,255,0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slide-in-right {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes slide-out-right {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
+
+.panel-enter {
+  animation: slide-in-right 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.panel-exit {
+  animation: slide-out-right 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.panel-input {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: #fff;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.panel-input:focus {
+  background: rgba(255,255,255,0.06);
+  border-color: var(--primary-container);
+  box-shadow: 0 0 0 4px rgba(37,99,235,0.15);
+  outline: none;
 }

@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 const supabase = require('../config/db');
 const { getAuditLogs } = require('../services/audit.service');
 const { grantPermission, revokePermission } = require('../services/permission.service');
+const { sendTempPasswordEmail } = require('../services/email.service');
 
 /**
  * GET /api/admin/users
@@ -102,6 +103,63 @@ const createUser = async (req, res, next) => {
       message: 'User created successfully.', 
       user: newUser,
       tempPassword
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * DELETE /api/admin/users/:id
+ * Permanently deletes a user from the app_users table and Supabase Auth.
+ * Cannot delete yourself or users from another org.
+ */
+const deleteUser = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.params.id, 10);
+
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID.' });
+    }
+
+    // Prevent self-deletion
+    if (userId === req.user.id) {
+      return res.status(400).json({ error: 'Cannot delete your own account.' });
+    }
+
+    // Fetch user to verify org membership
+    const { data: user, error: fetchError } = await supabase
+      .from('app_users')
+      .select('id, username, email, role, org_id')
+      .eq('id', userId)
+      .single();
+
+    if (fetchError || !user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    // Ensure user belongs to same org
+    if (user.org_id !== req.user.orgId) {
+      return res.status(403).json({ error: 'Not authorized to delete this user.' });
+    }
+
+    // Delete related records first (active sessions, audit logs FK refs, permissions)
+    await supabase.from('active_sessions').delete().eq('user_id', userId);
+    await supabase.from('user_table_permissions').delete().eq('user_id', userId);
+
+    // Delete the user from app_users table
+    const { error: deleteError } = await supabase
+      .from('app_users')
+      .delete()
+      .eq('id', userId);
+
+    if (deleteError) {
+      return res.status(500).json({ error: 'Failed to delete user from database.' });
+    }
+
+    res.json({
+      success: true,
+      message: `User "${user.username}" has been permanently deleted.`,
     });
   } catch (err) {
     next(err);
@@ -309,4 +367,53 @@ const getStats = async (req, res, next) => {
   }
 };
 
-module.exports = { listUsers, createUser, toggleSuspend, managePermissions, getAudit, setRowLimit, getStats };
+/**
+ * POST /api/admin/users/:id/send-credentials
+ * Sends the user's username and temporary password to their email address.
+ * The caller (admin) must pass the tempPassword in the request body.
+ */
+const sendCredentials = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.params.id, 10);
+    const { tempPassword } = req.body;
+
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID.' });
+    }
+
+    if (!tempPassword) {
+      return res.status(400).json({ error: 'tempPassword is required.' });
+    }
+
+    // Fetch user + org name
+    const { data: user, error: userError } = await supabase
+      .from('app_users')
+      .select('id, username, email, org_id')
+      .eq('id', userId)
+      .single();
+
+    if (userError || !user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    // Ensure user belongs to the same org as the requesting admin
+    if (user.org_id !== req.user.orgId) {
+      return res.status(403).json({ error: 'Not authorized to send credentials for this user.' });
+    }
+
+    // Fetch org name for the email
+    const { data: org } = await supabase
+      .from('organisations')
+      .select('name')
+      .eq('id', user.org_id)
+      .single();
+
+    await sendTempPasswordEmail(user.email, user.username, tempPassword, org?.name);
+
+    res.json({ success: true, message: `Credentials sent to ${user.email}` });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { listUsers, createUser, deleteUser, sendCredentials, toggleSuspend, managePermissions, getAudit, setRowLimit, getStats };

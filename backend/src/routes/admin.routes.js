@@ -7,6 +7,8 @@ const router = express.Router();
 const {
   listUsers,
   createUser,
+  deleteUser,
+  sendCredentials,
   toggleSuspend,
   managePermissions,
   getAudit,
@@ -25,6 +27,12 @@ router.get('/users', listUsers);
 
 // POST /api/admin/users — create a new user
 router.post('/users', createUser);
+
+// DELETE /api/admin/users/:id — permanently delete a user
+router.delete('/users/:id', deleteUser);
+
+// POST /api/admin/users/:id/send-credentials — email credentials to new user
+router.post('/users/:id/send-credentials', sendCredentials);
 
 // PATCH /api/admin/users/:id/suspend — toggle suspend
 router.patch('/users/:id/suspend', toggleSuspend);

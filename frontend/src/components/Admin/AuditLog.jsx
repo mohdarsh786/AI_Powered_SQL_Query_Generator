@@ -95,49 +95,50 @@ export default function AuditLog() {
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="bg-surface-container border border-outline-variant/30 rounded-lg p-md mb-md flex flex-wrap gap-4 items-center shrink-0">
-        <div className="flex items-center gap-2 text-on-surface-variant">
+      {/* Floating Filter Toolbar */}
+      <div className="sticky top-0 z-20 bg-[rgba(10,14,23,0.7)] backdrop-blur-xl border border-outline-variant/30 rounded-2xl p-md mb-md shrink-0 shadow-lg mt-2">
+        <div className="flex items-center gap-2 text-on-surface-variant mb-3">
           <Filter size={16} />
           <span className="font-label-md text-[12px] font-medium uppercase tracking-wider">Filters</span>
         </div>
-        <div className="w-px h-4 bg-outline-variant/30 hidden md:block"></div>
-        <input
-          className="bg-[#0a0e17] border border-[#1e2d45] rounded-lg px-3 py-1.5 text-body-sm font-body-sm text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container/50 outline-none transition-all placeholder:text-outline-variant w-32"
-          type="text"
-          placeholder="User ID"
-          value={filterUserId}
-          onChange={(e) => { setFilterUserId(e.target.value); setPage(1); }}
-        />
-        <select
-          className="bg-[#0a0e17] border border-[#1e2d45] rounded-lg px-3 py-1.5 text-body-sm font-body-sm text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container/50 outline-none transition-all"
-          value={filterQueryType}
-          onChange={(e) => { setFilterQueryType(e.target.value); setPage(1); }}
-        >
-          <option value="">All Types</option>
-          <option value="SELECT">SELECT</option>
-          <option value="INSERT">INSERT</option>
-          <option value="UPDATE">UPDATE</option>
-          <option value="DELETE">DELETE</option>
-          <option value="CREATE">CREATE</option>
-          <option value="DROP">DROP</option>
-        </select>
-        <div className="flex items-center gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <input
-            className="bg-[#0a0e17] border border-[#1e2d45] rounded-lg px-3 py-1.5 text-body-sm font-body-sm text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container/50 outline-none transition-all [color-scheme:dark]"
-            type="date"
-            value={filterFromDate}
-            onChange={(e) => { setFilterFromDate(e.target.value); setPage(1); }}
-            title="From date"
+            className="admin-input w-full px-3 py-2 text-[13px]"
+            type="text"
+            placeholder="User ID"
+            value={filterUserId}
+            onChange={(e) => { setFilterUserId(e.target.value); setPage(1); }}
           />
-          <span className="text-on-surface-variant font-label-md text-[12px]">to</span>
-          <input
-            className="bg-[#0a0e17] border border-[#1e2d45] rounded-lg px-3 py-1.5 text-body-sm font-body-sm text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container/50 outline-none transition-all [color-scheme:dark]"
-            type="date"
-            value={filterToDate}
-            onChange={(e) => { setFilterToDate(e.target.value); setPage(1); }}
-            title="To date"
-          />
+          <select
+            className="admin-select w-full px-3 py-2 text-[13px]"
+            value={filterQueryType}
+            onChange={(e) => { setFilterQueryType(e.target.value); setPage(1); }}
+          >
+            <option value="">All Types</option>
+            <option value="SELECT">SELECT</option>
+            <option value="INSERT">INSERT</option>
+            <option value="UPDATE">UPDATE</option>
+            <option value="DELETE">DELETE</option>
+            <option value="CREATE">CREATE</option>
+            <option value="DROP">DROP</option>
+          </select>
+          <div className="col-span-1 md:col-span-2 flex items-center gap-2">
+            <input
+              className="admin-input flex-1 px-3 py-2 text-[13px] [color-scheme:dark]"
+              type="date"
+              value={filterFromDate}
+              onChange={(e) => { setFilterFromDate(e.target.value); setPage(1); }}
+              title="From date"
+            />
+            <span className="text-on-surface-variant font-label-md text-[12px]">to</span>
+            <input
+              className="admin-input flex-1 px-3 py-2 text-[13px] [color-scheme:dark]"
+              type="date"
+              value={filterToDate}
+              onChange={(e) => { setFilterToDate(e.target.value); setPage(1); }}
+              title="To date"
+            />
+          </div>
         </div>
       </div>
 
@@ -170,7 +171,7 @@ export default function AuditLog() {
                 </tr>
               ) : (
                 logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-[#1a2436] transition-colors">
+                  <tr key={log.id} className="modern-grid-row">
                     <td className="p-sm px-md font-code-sm text-[11px] text-on-surface-variant">{formatDate(log.created_at)}</td>
                     <td className="p-sm px-md font-medium text-on-surface">{log.username || '-'}</td>
                     <td className="p-sm px-md">

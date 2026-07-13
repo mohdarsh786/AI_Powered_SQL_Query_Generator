@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { CheckCircle2, Users, TrendingUp, Monitor, Database, ArrowUp, Gavel, AlertTriangle, UserCog, KeyRound, ScrollText } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import Navbar from '../components/shared/Navbar'
@@ -66,6 +67,14 @@ export default function AdminDashboard() {
     }
   }, [])
 
+  useEffect(() => {
+    if (showSessionsModal) {
+      document.getElementById('dashboard-main')?.classList.add('dashboard-recess');
+    } else {
+      document.getElementById('dashboard-main')?.classList.remove('dashboard-recess');
+    }
+  }, [showSessionsModal])
+
   const handleSessionsClick = async () => {
     setShowSessionsModal(true)
     setFetchingSessions(true)
@@ -80,7 +89,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="admin-wrapper">
+    <div id="dashboard-main" className="admin-wrapper dashboard-wrapper">
       <Navbar user={user} />
 
       <main className="admin-content">
@@ -99,8 +108,8 @@ export default function AdminDashboard() {
         </header>
 
         {/* Stats Row */}
-        <div className="admin-stats-grid">
-          <div className="stat-card stat-card-gradient-1 flex flex-col gap-sm relative overflow-hidden">
+        <div className="admin-stats-grid mb-8">
+          <div className="stat-card stat-card-gradient-1 card-3d-hover flex flex-col gap-sm relative overflow-hidden">
             <div className="flex justify-between items-start z-10">
               <span className="text-on-surface-variant font-label-md text-[12px] uppercase tracking-wider">Total Users</span>
               <Users size={20} className="text-primary-container" />
@@ -112,7 +121,7 @@ export default function AdminDashboard() {
           </div>
 
           <div 
-            className="stat-card stat-card-gradient-2 flex flex-col gap-sm relative overflow-hidden cursor-pointer hover:brightness-110 transition-all"
+            className="stat-card stat-card-gradient-2 card-3d-hover flex flex-col gap-sm relative overflow-hidden cursor-pointer"
             onClick={handleSessionsClick}
           >
             <div className="flex justify-between items-start z-10">
@@ -125,7 +134,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="stat-card stat-card-gradient-3 flex flex-col gap-sm relative overflow-hidden">
+          <div className="stat-card stat-card-gradient-3 card-3d-hover flex flex-col gap-sm relative overflow-hidden">
             <div className="flex justify-between items-start z-10">
               <span className="text-on-surface-variant font-label-md text-[12px] uppercase tracking-wider">Queries Today</span>
               <Database size={20} className="text-tertiary-fixed-dim" />
@@ -136,7 +145,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="stat-card stat-card-gradient-4 flex flex-col gap-sm relative overflow-hidden">
+          <div className="stat-card stat-card-gradient-4 card-3d-hover flex flex-col gap-sm relative overflow-hidden">
             <div className="flex justify-between items-start z-10">
               <span className="text-on-surface-variant font-label-md text-[12px] uppercase tracking-wider">Flagged Ops</span>
               <Gavel size={20} className="text-error" />
@@ -150,50 +159,51 @@ export default function AdminDashboard() {
 
         {/* Main Workspace Area */}
         <div className="glass-panel rounded-xl flex flex-col flex-1 min-h-[500px]">
-          {/* Tabs */}
-          <div className="flex border-b border-outline-variant/30 px-md pt-sm gap-2">
-            <button
-              onClick={() => setActiveTab('users')}
-              className={`px-md py-sm font-label-md text-[12px] flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'users' ? 'border-secondary text-secondary' : 'border-transparent text-on-surface-variant hover:text-on-surface'
-                }`}
-            >
-              <UserCog size={16} /> Users
-            </button>
-            <button
-              onClick={() => setActiveTab('permissions')}
-              className={`px-md py-sm font-label-md text-[12px] flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'permissions' ? 'border-secondary text-secondary' : 'border-transparent text-on-surface-variant hover:text-on-surface'
-                }`}
-            >
-              <KeyRound size={16} /> Permissions
-            </button>
-            <button
-              onClick={() => setActiveTab('audit')}
-              className={`px-md py-sm font-label-md text-[12px] flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'audit' ? 'border-secondary text-secondary' : 'border-transparent text-on-surface-variant hover:text-on-surface'
-                }`}
-            >
-              <ScrollText size={16} /> Audit Logs
-            </button>
+          {/* 3D Pill Tabs */}
+          <div className="flex justify-center mb-6 z-10">
+            <div className="pill-nav">
+              <div
+                onClick={() => setActiveTab('users')}
+                className={`pill-nav-item ${activeTab === 'users' ? 'active' : ''}`}
+              >
+                <UserCog size={16} /> Users
+              </div>
+              <div
+                onClick={() => setActiveTab('permissions')}
+                className={`pill-nav-item ${activeTab === 'permissions' ? 'active' : ''}`}
+              >
+                <KeyRound size={16} /> Permissions
+              </div>
+              <div
+                onClick={() => setActiveTab('audit')}
+                className={`pill-nav-item ${activeTab === 'audit' ? 'active' : ''}`}
+              >
+                <ScrollText size={16} /> Audit Logs
+              </div>
+            </div>
           </div>
 
           {/* Tab Content */}
-          <div className="p-md flex flex-col flex-1 relative overflow-hidden">
-            {activeTab === 'users' && <UserManagement />}
-            {activeTab === 'permissions' && <PermissionControl />}
-            {activeTab === 'audit' && <AuditLog />}
+          <div className="perspective-container">
+            {activeTab === 'users' && <div key="users" className="tab-pane-enter flex-1 flex flex-col"><UserManagement /></div>}
+            {activeTab === 'permissions' && <div key="permissions" className="tab-pane-enter flex-1 flex flex-col"><PermissionControl /></div>}
+            {activeTab === 'audit' && <div key="audit" className="tab-pane-enter flex-1 flex flex-col"><AuditLog /></div>}
           </div>
         </div>
       </main>
 
-      {/* Active Sessions Modal */}
-      {showSessionsModal && (
-        <div className="modal-overlay" onClick={() => setShowSessionsModal(false)}>
-          <div className="modal-card" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>👥 Active Sessions</h3>
-              <button className="modal-close" onClick={() => setShowSessionsModal(false)}>✕</button>
+      {/* Active Sessions Modal (Sliding Panel) */}
+      {showSessionsModal && createPortal(
+        <div className="sliding-panel-overlay animate-in fade-in duration-300" onClick={() => setShowSessionsModal(false)}>
+          <div className="sliding-panel panel-enter" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center px-xl py-lg border-b border-outline-variant/10">
+              <h3 className="font-h3 text-[20px] font-semibold text-on-surface">👥 Active Sessions</h3>
+              <button className="text-on-surface-variant hover:text-on-surface p-2 rounded-full hover:bg-surface-variant transition-colors" onClick={() => setShowSessionsModal(false)}>
+                <X size={20} />
+              </button>
             </div>
 
-            <div className="modal-body">
+            <div className="flex-1 overflow-y-auto p-xl">
               {fetchingSessions ? (
                 <div className="flex justify-center py-8">
                   <div className="spinner spinner-md"></div>
@@ -203,9 +213,9 @@ export default function AdminDashboard() {
                   No active sessions found.
                 </div>
               ) : (
-                <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
+                <div className="space-y-4">
                   {sessionsList.map(session => (
-                    <div key={session.id} className="admin-session-item">
+                    <div key={session.id} className="admin-session-item bg-surface-container border border-outline-variant/10">
                       <div className="admin-session-left">
                         <div className="admin-session-user">
                           {session.username}
@@ -227,13 +237,14 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            <div className="modal-footer border-t border-outline-variant/20 pt-4 mt-4">
-              <button className="btn-ghost w-full" onClick={() => setShowSessionsModal(false)}>
+            <div className="p-xl border-t border-outline-variant/10 mt-auto">
+              <button className="bg-surface-variant text-on-surface hover:bg-surface-container px-6 py-3 rounded-xl font-medium w-full transition-colors" onClick={() => setShowSessionsModal(false)}>
                 Close
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Footer */}

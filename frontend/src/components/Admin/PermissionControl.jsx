@@ -111,7 +111,7 @@ export default function PermissionControl() {
         <h3 className="font-h3 text-[20px] font-semibold text-on-surface">Permission Control</h3>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-lg mb-lg">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-lg mb-lg max-w-3xl">
         <div className="flex flex-col gap-sm">
           <label className="font-label-md text-[12px] font-medium text-on-surface-variant">Select User</label>
           <div className="relative">
@@ -131,22 +131,23 @@ export default function PermissionControl() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-sm">
-          <label className="font-label-md text-[12px] font-medium text-on-surface-variant">Select Table</label>
-          <div className="relative">
-            <TableProperties size={18} className="absolute left-3 top-3 text-outline" />
-            <select
-              className="w-full admin-select pl-10 pr-4 py-2.5 appearance-none cursor-pointer"
-              value={selectedTable}
-              onChange={(e) => setSelectedTable(e.target.value)}
-            >
-              <option value="">-- Choose a table --</option>
-              {tables.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+        <div className="flex flex-col gap-sm md:col-span-2">
+          <label className="font-label-md text-[12px] font-medium text-on-surface-variant">Select Table (Target Matrix)</label>
+          <div className="flex flex-wrap gap-3 mt-2">
+            {tables.map((t) => (
+              <button
+                key={t}
+                onClick={() => setSelectedTable(t)}
+                className={`px-4 py-2 rounded-xl border text-[13px] font-code-sm transition-all duration-300 ${
+                  selectedTable === t
+                    ? 'bg-primary-container border-primary-container text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]'
+                    : 'bg-surface-container-low border-outline-variant/30 text-on-surface-variant hover:border-primary-container/50 hover:bg-surface-container'
+                }`}
+              >
+                <TableProperties size={14} className="inline-block mr-2 -mt-0.5" />
+                {t}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -174,7 +175,7 @@ export default function PermissionControl() {
             })}
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end mt-lg pt-md border-t border-outline-variant/20">
             <button
               className="bg-primary-container text-white font-label-md text-[13px] font-medium px-6 py-2 rounded-lg hover:bg-inverse-primary transition-colors disabled:opacity-50 flex items-center gap-2"
               onClick={handleGrant}
