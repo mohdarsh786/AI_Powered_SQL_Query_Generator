@@ -1,0 +1,14 @@
+:root {
+  /* TYPOGRAPHY HIERARCHY */
+  --text-display: 40px;
+  --text-page-title: 32px;
+  --text-section: 22px;
+  --text-card-title: 15px;
+  --text-body: 14px;
+  --text-caption: 12px;
+  --text-helper: 11px;
+
+  /* FONTS */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}

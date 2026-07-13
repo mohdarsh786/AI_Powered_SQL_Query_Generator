@@ -1,0 +1,8 @@
+:root {
+  /* SHADOWS */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.2);
+  --shadow-modal: 0 24px 48px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 8px rgba(91, 140, 255, 0.03); /* Greatly reduced glow */
+}

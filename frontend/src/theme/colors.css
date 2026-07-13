@@ -1,0 +1,23 @@
+:root {
+  /* BACKGROUNDS */
+  --bg-base: #090B14;
+  --bg-surface: #101624;
+  --bg-card: #111827;
+
+  /* ACCENTS */
+  --accent-primary: #5B8CFF;
+  --accent-secondary: #8B5CF6;
+  --accent-highlight: #22D3EE;
+
+  /* SEMANTIC */
+  --semantic-success: #10B981;
+  --semantic-warning: #F59E0B;
+  --semantic-danger: #F43F5E;
+
+  /* TEXT */
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+
+  /* BORDERS */
+  --border-muted: rgba(255, 255, 255, 0.08);
+}
