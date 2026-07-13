@@ -746,13 +746,14 @@
 /* Mobile Responsiveness for Dashboard */
 @media (max-width: 968px) {
   .dashboard-body {
-    flex-direction: column;
+    flex-direction: column !important;
+    overflow-y: auto !important;
   }
   
   .dashboard-sidebar {
     width: 100% !important;
     min-width: 100% !important;
-    max-height: 250px;
+    max-height: none !important;
     border-right: none;
     border-bottom: 1px solid var(--border-default);
   }
@@ -761,17 +762,34 @@
     flex-direction: column !important;
   }
 
-  .split-left, .split-right {
-    width: 100% !important;
-    height: 50% !important;
-    min-height: 300px;
+  .dashboard-main {
+    flex: none !important;
   }
 
-  .gutter.gutter-horizontal {
+  .split-left, .split-right, .split-top, .split-bottom {
     width: 100% !important;
-    height: 12px !important;
-    cursor: row-resize !important;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="4" viewBox="0 0 20 4"><circle cx="2" cy="2" r="1.5" fill="%238d90a0"/><circle cx="10" cy="2" r="1.5" fill="%238d90a0"/><circle cx="18" cy="2" r="1.5" fill="%238d90a0"/></svg>') !important;
+    height: auto !important;
+    flex-basis: auto !important;
+  }
+
+  .split-left {
+    min-height: 500px !important;
+  }
+
+  .split-right {
+    min-height: 400px !important;
+  }
+
+  .split-top {
+    min-height: 300px !important;
+  }
+  
+  .split-bottom {
+    min-height: 200px !important;
+  }
+
+  .gutter {
+    display: none !important;
   }
 
   .nl-prompt-bar {
@@ -779,7 +797,7 @@
     align-items: stretch;
   }
 
-  .btn-run, .btn-secondary {
+  .btn-run, .btn-generate {
     width: 100%;
     justify-content: center;
   }

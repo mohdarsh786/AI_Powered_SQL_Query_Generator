@@ -1,7 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
-import { Filter, RefreshCw } from 'lucide-react'
+import { Filter, RefreshCw, Activity } from 'lucide-react'
+import SectionHeader from '../ui/SectionHeader'
+import Card from '../ui/Card'
+import Table from '../ui/Table'
+import Badge from '../ui/Badge'
+import Button from '../ui/Button'
+import EmptyState from '../ui/EmptyState'
 
 export default function AuditLog() {
   const [logs, setLogs] = useState([])
@@ -61,56 +67,60 @@ export default function AuditLog() {
     return new Date(dateStr).toLocaleString()
   }
 
-  const getRoleBadgeClasses = (role) => {
+  const getRoleVariant = (role) => {
     switch (role?.toLowerCase()) {
-      case 'admin': return 'bg-error/20 text-error border-error/30'
-      case 'dba': return 'bg-warning/20 text-warning border-warning/30'
-      default: return 'bg-primary-container/20 text-primary-fixed-dim border-primary-container/30'
+      case 'admin': return 'danger' // Crimson
+      case 'dba': return 'warning'  // Amber
+      default: return 'default'     // Neutral
     }
   }
 
-  const getTypeBadgeClasses = (type) => {
+  const getTypeVariant = (type) => {
     switch (type?.toUpperCase()) {
-      case 'SELECT': return 'bg-success/20 text-success border-success/30'
+      case 'SELECT': return 'success'
       case 'INSERT':
-      case 'UPDATE': return 'bg-warning/20 text-warning border-warning/30'
+      case 'UPDATE': return 'warning'
       case 'DELETE':
       case 'DROP':
-      case 'TRUNCATE': return 'bg-error/20 text-error border-error/30'
-      default: return 'bg-surface-variant text-on-surface-variant border-outline-variant/30'
+      case 'TRUNCATE': return 'danger'
+      default: return 'default'
     }
   }
 
   return (
-    <div className="flex flex-col flex-1 h-full">
-      <div className="flex justify-between items-center mb-md shrink-0">
-        <h3 className="font-h3 text-[20px] font-semibold text-on-surface">System Audit Logs</h3>
-        <button
-          className="bg-surface-container-high border border-outline-variant/50 hover:bg-surface-variant text-on-surface px-4 py-2 rounded-lg transition-all active:scale-95 font-label-md text-[13px] font-medium flex items-center gap-2"
+    <div className="flex flex-col h-full w-full">
+      <div className="flex flex-col sm:flex-row gap-4 sm:justify-between items-start sm:items-center mb-[var(--spacing-6)] shrink-0 w-full">
+        <SectionHeader 
+          title="System Audit Logs" 
+          description="Monitor database activity, user queries, and system events."
+        />
+        <Button
+          variant="outline"
+          size="sm"
           onClick={fetchLogs}
           disabled={loading}
         >
-          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           Refresh
-        </button>
+        </Button>
       </div>
 
       {/* Floating Filter Toolbar */}
-      <div className="sticky top-0 z-20 bg-[rgba(10,14,23,0.7)] backdrop-blur-xl border border-outline-variant/30 rounded-2xl p-md mb-md shrink-0 shadow-lg mt-2">
-        <div className="flex items-center gap-2 text-on-surface-variant mb-3">
-          <Filter size={16} />
-          <span className="font-label-md text-[12px] font-medium uppercase tracking-wider">Filters</span>
+      <Card className="mb-[var(--spacing-6)] shrink-0 p-[var(--spacing-4)] flex flex-col gap-[var(--spacing-3)] bg-surface/80 backdrop-blur-sm border-[var(--color-muted)]">
+        <div className="flex items-center gap-2 text-text-secondary">
+          <Filter className="w-4 h-4" />
+          <span className="text-[var(--text-caption)] font-medium uppercase tracking-wider">Filters</span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-[var(--spacing-4)]">
           <input
-            className="admin-input w-full px-3 py-2 text-[13px]"
+            className="w-full bg-surface border border-[var(--color-muted)] rounded-[var(--radius-md)] px-3 py-2 text-[var(--text-body)] text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/40"
             type="text"
             placeholder="User ID"
             value={filterUserId}
             onChange={(e) => { setFilterUserId(e.target.value); setPage(1); }}
           />
           <select
-            className="admin-select w-full px-3 py-2 text-[13px]"
+            className="w-full bg-surface border border-[var(--color-muted)] rounded-[var(--radius-md)] px-3 py-2 text-[var(--text-body)] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/40 appearance-none"
             value={filterQueryType}
             onChange={(e) => { setFilterQueryType(e.target.value); setPage(1); }}
           >
@@ -122,17 +132,17 @@ export default function AuditLog() {
             <option value="CREATE">CREATE</option>
             <option value="DROP">DROP</option>
           </select>
-          <div className="col-span-1 md:col-span-2 flex items-center gap-2">
+          <div className="col-span-1 sm:col-span-2 flex items-center gap-2">
             <input
-              className="admin-input flex-1 px-3 py-2 text-[13px] [color-scheme:dark]"
+              className="w-full bg-surface border border-[var(--color-muted)] rounded-[var(--radius-md)] px-3 py-2 text-[var(--text-body)] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/40 [color-scheme:dark]"
               type="date"
               value={filterFromDate}
               onChange={(e) => { setFilterFromDate(e.target.value); setPage(1); }}
               title="From date"
             />
-            <span className="text-on-surface-variant font-label-md text-[12px]">to</span>
+            <span className="text-text-secondary text-[var(--text-caption)]">to</span>
             <input
-              className="admin-input flex-1 px-3 py-2 text-[13px] [color-scheme:dark]"
+              className="w-full bg-surface border border-[var(--color-muted)] rounded-[var(--radius-md)] px-3 py-2 text-[var(--text-body)] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/40 [color-scheme:dark]"
               type="date"
               value={filterToDate}
               onChange={(e) => { setFilterToDate(e.target.value); setPage(1); }}
@@ -140,85 +150,86 @@ export default function AuditLog() {
             />
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Table */}
-      <div className="border border-[#1e2d45] rounded-lg overflow-hidden flex-1 flex flex-col min-h-0">
-        <div className="overflow-y-auto flex-1">
-          <table className="w-full text-left border-collapse">
-            <thead className="sticky top-0 z-10">
-              <tr className="border-b border-[#1e2d45] bg-[#0f1623]">
-                <th className="p-sm px-md font-label-md text-[12px] font-medium text-on-surface-variant uppercase tracking-wider">Timestamp</th>
-                <th className="p-sm px-md font-label-md text-[12px] font-medium text-on-surface-variant uppercase tracking-wider">Username</th>
-                <th className="p-sm px-md font-label-md text-[12px] font-medium text-on-surface-variant uppercase tracking-wider">Role</th>
-                <th className="p-sm px-md font-label-md text-[12px] font-medium text-on-surface-variant uppercase tracking-wider">Type</th>
-                <th className="p-sm px-md font-label-md text-[12px] font-medium text-on-surface-variant uppercase tracking-wider">Tables</th>
-                <th className="p-sm px-md font-label-md text-[12px] font-medium text-on-surface-variant uppercase tracking-wider">Rows</th>
-                <th className="p-sm px-md font-label-md text-[12px] font-medium text-on-surface-variant uppercase tracking-wider">Time (ms)</th>
-                <th className="p-sm px-md font-label-md text-[12px] font-medium text-on-surface-variant uppercase tracking-wider">IP</th>
-              </tr>
-            </thead>
-            <tbody className="font-body-sm text-[13px] divide-y divide-[#1e2d45]">
-              {loading && logs.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="text-center p-xl">
-                    <div className="w-6 h-6 border-2 border-secondary/20 border-t-secondary rounded-full animate-spin mx-auto"></div>
-                  </td>
-                </tr>
-              ) : logs.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="text-center p-xl text-on-surface-variant">No audit logs found.</td>
-                </tr>
-              ) : (
-                logs.map((log) => (
-                  <tr key={log.id} className="modern-grid-row">
-                    <td className="p-sm px-md font-code-sm text-[11px] text-on-surface-variant">{formatDate(log.created_at)}</td>
-                    <td className="p-sm px-md font-medium text-on-surface">{log.username || '-'}</td>
-                    <td className="p-sm px-md">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-label-md border uppercase ${getRoleBadgeClasses(log.role)}`}>
-                        {log.role || '-'}
-                      </span>
-                    </td>
-                    <td className="p-sm px-md">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-label-md border font-code-sm ${getTypeBadgeClasses(log.query_type)}`}>
-                        {log.query_type || '-'}
-                      </span>
-                    </td>
-                    <td className="p-sm px-md text-on-surface-variant font-code-sm text-[11px] max-w-[150px] truncate" title={Array.isArray(log.tables_used) ? log.tables_used.join(', ') : '-'}>
-                      {Array.isArray(log.tables_used) ? log.tables_used.join(', ') : '-'}
-                    </td>
-                    <td className="p-sm px-md text-on-surface-variant">{log.rows_affected ?? '-'}</td>
-                    <td className="p-sm px-md text-on-surface-variant">{log.execution_time_ms ?? '-'}</td>
-                    <td className="p-sm px-md font-code-sm text-[11px] text-outline">{log.ip_address || '-'}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+      <div className="flex-1 min-h-0">
+        {loading && logs.length === 0 ? (
+          <div className="flex justify-center p-12">
+            <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <Table
+            headers={['Timestamp', 'Username', 'Role', 'Type', 'Tables', 'Rows', 'Time (ms)', 'IP']}
+            data={logs}
+            emptyState={
+              <div className="mt-[var(--spacing-8)]">
+                <EmptyState 
+                  icon={Activity} 
+                  title="No audit logs found" 
+                  description="Try adjusting your filters or wait for system activity." 
+                />
+              </div>
+            }
+            renderRow={(log) => (
+              <>
+                <td className="px-5 py-3 whitespace-nowrap text-[var(--text-caption)] text-text-secondary font-mono">
+                  {formatDate(log.created_at)}
+                </td>
+                <td className="px-5 py-3 whitespace-nowrap font-medium text-text-primary">
+                  {log.username || '-'}
+                </td>
+                <td className="px-5 py-3 whitespace-nowrap">
+                  <Badge variant={getRoleVariant(log.role)}>
+                    {log.role?.toUpperCase() || '-'}
+                  </Badge>
+                </td>
+                <td className="px-5 py-3 whitespace-nowrap">
+                  <Badge variant={getTypeVariant(log.query_type)}>
+                    {log.query_type || '-'}
+                  </Badge>
+                </td>
+                <td className="px-5 py-3 whitespace-nowrap text-[var(--text-caption)] text-text-secondary font-mono max-w-[150px] truncate" title={Array.isArray(log.tables_used) ? log.tables_used.join(', ') : '-'}>
+                  {Array.isArray(log.tables_used) ? log.tables_used.join(', ') : '-'}
+                </td>
+                <td className="px-5 py-3 whitespace-nowrap text-[var(--text-caption)] text-text-secondary">
+                  {log.rows_affected ?? '-'}
+                </td>
+                <td className="px-5 py-3 whitespace-nowrap text-[var(--text-caption)] text-text-secondary">
+                  {log.execution_time_ms ?? '-'}
+                </td>
+                <td className="px-5 py-3 whitespace-nowrap text-[var(--text-caption)] text-text-secondary/50 font-mono">
+                  {log.ip_address || '-'}
+                </td>
+              </>
+            )}
+          />
+        )}
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-md shrink-0 bg-surface-container border border-outline-variant/30 rounded-lg p-sm px-md">
-          <span className="font-label-md text-[12px] text-on-surface-variant">
-            Page {page} of {totalPages} <span className="text-outline">({total} total records)</span>
+        <div className="flex flex-col sm:flex-row gap-4 sm:justify-between items-center mt-[var(--spacing-6)] shrink-0 bg-surface border border-[var(--color-muted)] rounded-[var(--radius-md)] p-[var(--spacing-3)] px-[var(--spacing-4)]">
+          <span className="text-[var(--text-caption)] text-text-secondary">
+            Page <span className="text-text-primary font-medium">{page}</span> of {totalPages} <span className="text-text-secondary/50">({total} records)</span>
           </span>
           <div className="flex gap-2">
-            <button
-              className="bg-[#0a0e17] border border-[#1e2d45] hover:bg-surface-variant text-on-surface px-3 py-1.5 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-label-md text-[12px]"
+            <Button
+              variant="outline"
+              size="sm"
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
               Previous
-            </button>
-            <button
-              className="bg-[#0a0e17] border border-[#1e2d45] hover:bg-surface-variant text-on-surface px-3 py-1.5 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-label-md text-[12px]"
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
             >
               Next
-            </button>
+            </Button>
           </div>
         </div>
       )}

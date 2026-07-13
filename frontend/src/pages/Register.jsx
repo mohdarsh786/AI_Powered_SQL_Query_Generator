@@ -301,13 +301,13 @@ export default function Register() {
                 />
                 <button type="button" className="password-toggle"
                   onClick={() => setShowPassword(v => !v)}>
-                  {showPassword ? <EyeOff size={15}/> : <Eye size={15}/>}
+                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
               {form.password.length > 0 && (
                 <div className="strength-row">
                   <div className="strength-bar">
-                    {[1,2,3,4,5].map(i => (
+                    {[1, 2, 3, 4, 5].map(i => (
                       <div key={i} className="strength-seg"
                         style={{ background: i <= strength.score ? strength.color : 'var(--border-default)' }}
                       />
@@ -332,7 +332,7 @@ export default function Register() {
                 />
                 <button type="button" className="password-toggle"
                   onClick={() => setShowConfirm(v => !v)}>
-                  {showConfirm ? <EyeOff size={15}/> : <Eye size={15}/>}
+                  {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
               {form.confirmPassword.length > 0 && (
@@ -411,7 +411,7 @@ export default function Register() {
 
             <button
               className="btn-back"
-              onClick={() => { setStep('form'); setOtp(['','','','','','']) }}
+              onClick={() => { setStep('form'); setOtp(['', '', '', '', '', '']) }}
             >
               ← Back to registration
             </button>

@@ -1,7 +1,10 @@
 import { useState, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Key, Mail, Lock, CheckCircle2 } from 'lucide-react'
 import api from '../services/api'
+import Input from '../components/ui/Input'
+import Button from '../components/ui/Button'
+import Card from '../components/ui/Card'
 import '../styles/ForgotPassword.css'
 
 export default function ForgotPassword() {
@@ -133,56 +136,62 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="fp-page">
-      <div className="fp-card">
-
+    <div className="min-h-screen flex flex-col items-center justify-center bg-base p-4">
+      <Card className="w-full max-w-md p-6 sm:p-8 bg-surface shadow-xl border-muted">
+        
         {/* STEP: EMAIL */}
         {step === 'email' && (
           <>
-            <div className="fp-header">
-              <div className="fp-icon">🔑</div>
-              <h2>Forgot your password?</h2>
-              <p>Enter your email and we'll send you a reset code.</p>
-            </div>
-            <form onSubmit={handleRequestReset} className="fp-form">
-              <div className="form-group">
-                <label className="form-label">Email Address</label>
-                <input
-                  className="form-input"
-                  type="email"
-                  placeholder="you@company.com"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                  autoFocus
-                />
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                <Key className="w-6 h-6 text-primary" />
               </div>
-              {error && <div className="fp-error">⚠ {error}</div>}
-              <button className="btn-fp-primary" type="submit" disabled={loading}>
-                {loading ? 'Sending...' : 'Send Reset Code →'}
-              </button>
+              <h2 className="text-2xl font-bold text-text-primary mb-2">Forgot your password?</h2>
+              <p className="text-text-secondary text-sm">Enter your email and we'll send you a reset code.</p>
+            </div>
+            <form onSubmit={handleRequestReset} className="flex flex-col gap-5">
+              <Input
+                label="Email Address"
+                type="email"
+                placeholder="you@company.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                autoFocus
+              />
+              {error && <div className="p-3 bg-danger/10 border border-danger/30 rounded-md text-sm text-danger">{error}</div>}
+              <Button type="submit" variant="primary" className="w-full" isLoading={loading}>
+                Send Reset Code →
+              </Button>
             </form>
-            <Link to="/login" className="fp-back-link">← Back to login</Link>
+            <div className="text-center mt-6">
+              <Link to="/login" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                ← Back to login
+              </Link>
+            </div>
           </>
         )}
 
         {/* STEP: OTP */}
         {step === 'otp' && (
           <>
-            <div className="fp-header">
-              <div className="fp-icon">✉</div>
-              <h2>Check your email</h2>
-              <p>
-                We sent a 6-digit code to <strong>{email}</strong>.
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                <Mail className="w-6 h-6 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-text-primary mb-2">Check your email</h2>
+              <p className="text-text-secondary text-sm">
+                We sent a 6-digit code to <strong className="text-text-primary">{email}</strong>.
                 Enter it below to continue.
               </p>
             </div>
-            <div className="otp-inputs" onPaste={handleOtpPaste}>
+            
+            <div className="flex justify-center gap-2 mb-6" onPaste={handleOtpPaste}>
               {otp.map((digit, i) => (
                 <input
                   key={i}
                   ref={el => otpRefs.current[i] = el}
-                  className={`otp-input ${digit ? 'filled' : ''}`}
+                  className={`w-12 h-14 text-center text-xl font-semibold bg-surface border rounded-[var(--radius-md)] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/40 transition-colors ${digit ? 'border-primary text-text-primary' : 'border-muted text-text-primary'}`}
                   type="text"
                   inputMode="numeric"
                   maxLength={1}
@@ -193,119 +202,128 @@ export default function ForgotPassword() {
                 />
               ))}
             </div>
-            {error && <div className="fp-error">⚠ {error}</div>}
-            <button
-              className="btn-fp-primary"
+            
+            {error && <div className="p-3 bg-danger/10 border border-danger/30 rounded-md text-sm text-danger mb-4">{error}</div>}
+            
+            <Button
               onClick={handleVerifyOTP}
-              disabled={loading || otp.join('').length !== 6}
+              variant="primary"
+              className="w-full mb-4"
+              isLoading={loading}
+              disabled={otp.join('').length !== 6}
             >
-              {loading ? 'Verifying...' : 'Verify Code →'}
-            </button>
-            <div className="fp-resend">
+              Verify Code →
+            </Button>
+            
+            <div className="text-center mb-4">
               {resendCooldown > 0
-                ? <span>Resend in {resendCooldown}s</span>
-                : <button className="btn-resend" onClick={handleResend}>Resend code</button>
+                ? <span className="text-sm text-text-muted">Resend in {resendCooldown}s</span>
+                : <button className="text-sm text-primary hover:underline focus:outline-none" onClick={handleResend}>Resend code</button>
               }
             </div>
-            <button className="btn-fp-ghost" onClick={() => setStep('email')}>
-              ← Use a different email
-            </button>
+            
+            <div className="text-center">
+              <button className="text-sm text-text-secondary hover:text-primary transition-colors focus:outline-none" onClick={() => setStep('email')}>
+                ← Use a different email
+              </button>
+            </div>
           </>
         )}
 
         {/* STEP: NEW PASSWORD */}
         {step === 'reset' && (
           <>
-            <div className="fp-header">
-              <div className="fp-icon">🔒</div>
-              <h2>Set new password</h2>
-              <p>Choose a strong password you haven't used before.</p>
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                <Lock className="w-6 h-6 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-text-primary mb-2">Set new password</h2>
+              <p className="text-text-secondary text-sm">Choose a strong password you haven't used before.</p>
             </div>
-            <form onSubmit={handleResetPassword} className="fp-form">
-              <div className="form-group">
-                <label className="form-label">New Password</label>
-                <div className="password-wrapper">
-                  <input
-                    className="form-input"
-                    type={showNew ? 'text' : 'password'}
-                    placeholder="Min. 8 characters"
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
-                    required
-                    autoFocus
-                  />
-                  <button type="button" className="password-toggle"
-                    onClick={() => setShowNew(v => !v)}>
-                    {showNew ? <EyeOff size={15}/> : <Eye size={15}/>}
-                  </button>
-                </div>
+            <form onSubmit={handleResetPassword} className="flex flex-col gap-5">
+              <div className="relative">
+                <Input
+                  label="New Password"
+                  type={showNew ? 'text' : 'password'}
+                  placeholder="Min. 8 characters"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  required
+                  autoFocus
+                />
+                <button type="button" className="absolute right-3 top-[34px] text-text-muted hover:text-text-primary transition-colors focus:outline-none"
+                  onClick={() => setShowNew(v => !v)}>
+                  {showNew ? <EyeOff size={18}/> : <Eye size={18}/>}
+                </button>
                 {newPassword.length > 0 && (
-                  <div className="strength-row">
-                    <div className="strength-bar">
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className="flex-1 flex gap-1 h-1.5">
                       {[1,2,3,4,5].map(i => (
-                        <div key={i} className="strength-seg"
-                          style={{ background: i <= strength.score ? strength.color : 'var(--border-default)' }}
+                        <div key={i} className="flex-1 rounded-full transition-colors"
+                          style={{ background: i <= strength.score ? strength.color : 'var(--border-muted)' }}
                         />
                       ))}
                     </div>
-                    <span style={{ color: strength.color, fontSize: '11px' }}>{strength.label}</span>
+                    <span style={{ color: strength.color, fontSize: '11px' }} className="w-12 text-right">{strength.label}</span>
                   </div>
                 )}
               </div>
-              <div className="form-group">
-                <label className="form-label">Confirm Password</label>
-                <div className="password-wrapper">
-                  <input
-                    className="form-input"
-                    type={showConfirm ? 'text' : 'password'}
-                    placeholder="Repeat new password"
-                    value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                  <button type="button" className="password-toggle"
-                    onClick={() => setShowConfirm(v => !v)}>
-                    {showConfirm ? <EyeOff size={15}/> : <Eye size={15}/>}
-                  </button>
-                </div>
+              
+              <div className="relative">
+                <Input
+                  label="Confirm Password"
+                  type={showConfirm ? 'text' : 'password'}
+                  placeholder="Repeat new password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  required
+                />
+                <button type="button" className="absolute right-3 top-[34px] text-text-muted hover:text-text-primary transition-colors focus:outline-none"
+                  onClick={() => setShowConfirm(v => !v)}>
+                  {showConfirm ? <EyeOff size={18}/> : <Eye size={18}/>}
+                </button>
                 {confirmPassword.length > 0 && (
-                  <p style={{
-                    fontSize: '11px', marginTop: '4px',
-                    color: newPassword === confirmPassword
-                      ? 'var(--accent-emerald)' : 'var(--accent-red)'
+                  <p className="text-[11px] mt-1" style={{
+                    color: newPassword === confirmPassword ? 'var(--semantic-success)' : 'var(--semantic-danger)'
                   }}>
                     {newPassword === confirmPassword ? '✓ Passwords match' : '✗ Do not match'}
                   </p>
                 )}
               </div>
-              {error && <div className="fp-error">⚠ {error}</div>}
-              <button
-                className="btn-fp-primary"
+              
+              {error && <div className="p-3 bg-danger/10 border border-danger/30 rounded-md text-sm text-danger">{error}</div>}
+              
+              <Button
+                variant="primary"
                 type="submit"
-                disabled={loading || strength.score < 2 || newPassword !== confirmPassword}
+                className="w-full mt-2"
+                isLoading={loading}
+                disabled={strength.score < 2 || newPassword !== confirmPassword}
               >
-                {loading ? 'Resetting...' : 'Reset Password →'}
-              </button>
+                Reset Password →
+              </Button>
             </form>
           </>
         )}
 
         {/* STEP: DONE */}
         {step === 'done' && (
-          <div className="fp-done">
-            <div className="fp-done-icon">✓</div>
-            <h2>Password reset!</h2>
-            <p>Your password has been updated successfully. You can now sign in with your new password.</p>
-            <button
-              className="btn-fp-primary"
+          <div className="flex flex-col items-center text-center py-4">
+            <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mb-6">
+              <CheckCircle2 className="w-8 h-8 text-success" />
+            </div>
+            <h2 className="text-2xl font-bold text-text-primary mb-3">Password reset!</h2>
+            <p className="text-text-secondary text-sm mb-8">Your password has been updated successfully. You can now sign in with your new password.</p>
+            <Button
+              variant="primary"
+              className="w-full"
               onClick={() => navigate('/login')}
             >
               Go to Login →
-            </button>
+            </Button>
           </div>
         )}
-
-      </div>
+      </Card>
     </div>
   )
 }

@@ -43,6 +43,8 @@ export default function UserDashboard() {
     let hSplit, vSplit;
     
     const initSplit = setTimeout(() => {
+      if (window.innerWidth <= 968) return;
+
       if (document.querySelector('.split-left') && document.querySelector('.split-right')) {
         hSplit = Split(['.split-left', '.split-right'], {
           sizes: [70, 30],

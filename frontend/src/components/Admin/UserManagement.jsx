@@ -1,8 +1,13 @@
-import { useState, useEffect } from 'react'
-import { createPortal } from 'react-dom'
+import React, { useState, useEffect } from 'react'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
-import { Search, UserPlus, User, X, CheckCircle2, Trash2, AlertTriangle } from 'lucide-react'
+import { UserPlus, User, Trash2, AlertTriangle, UserCog, ShieldAlert } from 'lucide-react'
+import Modal from '../ui/Modal'
+import Button from '../ui/Button'
+import Input from '../ui/Input'
+import SearchInput from '../ui/SearchInput'
+import Badge from '../ui/Badge'
+import Table from '../ui/Table'
 
 export default function UserManagement() {
   const [users, setUsers] = useState([])
@@ -12,7 +17,7 @@ export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState('')
 
   // Delete state
-  const [deleteTarget, setDeleteTarget] = useState(null) // user object to delete
+  const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
 
@@ -43,14 +48,6 @@ export default function UserManagement() {
   useEffect(() => {
     fetchUsers()
   }, [])
-
-  useEffect(() => {
-    if (showCreateModal || deleteTarget) {
-      document.getElementById('dashboard-main')?.classList.add('dashboard-recess')
-    } else {
-      document.getElementById('dashboard-main')?.classList.remove('dashboard-recess')
-    }
-  }, [showCreateModal, deleteTarget])
 
   const handleCreateUser = async (e) => {
     e.preventDefault()
@@ -145,411 +142,288 @@ export default function UserManagement() {
     u.email.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const getRoleBadgeClasses = (role) => {
+  const getRoleVariant = (role) => {
     switch (role?.toLowerCase()) {
-      case 'admin': return 'badge badge-admin'
-      case 'dba': return 'badge badge-dba'
-      default: return 'badge badge-user'
+      case 'admin': return 'danger' // Crimson
+      case 'dba': return 'warning'  // Amber
+      default: return 'default'     // Neutral Slate
     }
   }
 
+  const closeCreateModalAndReset = () => {
+    if (creating) return
+    setShowCreateModal(false)
+    setNewUser({ username: '', email: '', role: 'user' })
+    setTempPassword(null)
+    setCreatedUserId(null)
+    setCredentialsSent(false)
+  }
+
   return (
-    <div className="flex flex-col flex-1 h-full px-2">
+    <div className="flex flex-col h-full w-full">
       {/* Toolbar */}
-      <div className="flex justify-between items-center mt-4 mb-6 shrink-0">
-        <div className="relative w-64">
-          <Search size={18} className="absolute left-3 top-2.5 text-outline" />
-          <input
-            className="w-full admin-input pl-10 pr-3 py-2 text-[14px]"
-            placeholder="Search users..."
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <button
-          className="bg-primary-container text-white font-label-md text-[13px] font-medium px-5 py-2 rounded-full flex items-center gap-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] hover:bg-inverse-primary transition-colors active:scale-95"
-          onClick={() => setShowCreateModal(true)}
-        >
-          <UserPlus size={16} /> Create User
-        </button>
+      <div className="flex flex-col sm:flex-row gap-4 sm:justify-between items-start sm:items-center mb-[var(--spacing-6)] shrink-0 w-full">
+        <SearchInput
+          placeholder="Search users..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <Button variant="primary" onClick={() => setShowCreateModal(true)}>
+          <UserPlus className="w-4 h-4 mr-2" /> Create User
+        </Button>
       </div>
 
       {/* Table */}
-      <div className="border border-[#1e2d45] rounded-lg overflow-hidden flex-1 flex flex-col min-h-0">
-        <div className="overflow-y-auto flex-1">
-          <table className="w-full text-left border-collapse">
-            <thead className="sticky top-0 z-10">
-              <tr className="border-b border-[#1e2d45] bg-[#0f1623]">
-                <th className="p-sm px-md font-label-md text-[12px] font-medium text-on-surface-variant uppercase tracking-wider">User</th>
-                <th className="p-sm px-md font-label-md text-[12px] font-medium text-on-surface-variant uppercase tracking-wider">Role</th>
-                <th className="p-sm px-md font-label-md text-[12px] font-medium text-on-surface-variant uppercase tracking-wider">Status</th>
-                <th className="p-sm px-md font-label-md text-[12px] font-medium text-on-surface-variant uppercase tracking-wider">Row Limit</th>
-                <th className="p-sm px-md font-label-md text-[12px] font-medium text-on-surface-variant uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="font-body-md text-[14px] divide-y divide-[#1e2d45]">
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="text-center p-xl">
-                    <div className="w-6 h-6 border-2 border-secondary/20 border-t-secondary rounded-full animate-spin mx-auto"></div>
-                  </td>
-                </tr>
-              ) : filteredUsers.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="text-center p-xl text-on-surface-variant">No users found.</td>
-                </tr>
-              ) : (
-                filteredUsers.map((u) => (
-                  <tr key={u.id} className="modern-grid-row group">
-                    <td className="p-sm px-md">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant overflow-hidden flex-shrink-0 flex items-center justify-center text-on-surface-variant">
-                          <User size={20} />
-                        </div>
-                        <div>
-                          <div className="text-on-surface font-medium">{u.username}</div>
-                          <div className="text-on-surface-variant text-[12px]">{u.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-sm px-md">
-                      <span className={getRoleBadgeClasses(u.role)}>
-                        {u.role?.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="p-sm px-md">
-                      {u.is_suspended ? (
-                        <div className="flex items-center gap-1.5 text-outline">
-                          <div className="w-1.5 h-1.5 rounded-full bg-outline"></div> Suspended
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5 text-secondary-fixed-dim">
-                          <div className="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim"></div> Active
-                        </div>
-                      )}
-                    </td>
-                    <td className="p-sm px-md font-code-md text-code-md text-on-surface-variant">
-                      <div className="flex items-center gap-2">
-                        <input
-                          id={`limit-${u.id}`}
-                          className="admin-input-small"
-                          type="number"
-                          defaultValue={u.row_limit}
-                          onChange={(e) =>
-                            setRowLimitEditing((prev) => ({ ...prev, [u.id]: e.target.value }))
-                          }
-                        />
-                        {rowLimitEditing[u.id] !== undefined && (
-                          <button
-                            className="bg-secondary/20 text-secondary border border-secondary/30 px-2 py-1 rounded text-[11px] font-medium hover:bg-secondary/30 transition-colors"
-                            onClick={() => handleSetRowLimit(u.id)}
-                          >
-                            Set
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-sm px-md">
-                      <div className="flex items-center gap-2">
-                        <button
-                          className={`btn-action ${u.is_suspended ? 'btn-activate' : 'btn-suspend'}`}
-                          onClick={() => handleToggleSuspend(u.id)}
-                        >
-                          {u.is_suspended ? 'Activate' : 'Suspend'}
-                        </button>
-                        <button
-                          className="btn-action btn-edit-limit"
-                          onClick={() => document.getElementById(`limit-${u.id}`)?.focus()}
-                        >
-                          Set Limit
-                        </button>
-                        <button
-                          className="btn-action btn-delete"
-                          onClick={() => openDeleteModal(u)}
-                          title="Permanently delete user"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {loading ? (
+        <div className="flex justify-center p-12">
+          <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
         </div>
-      </div>
+      ) : (
+        <Table
+          headers={['User', 'Role', 'Status', 'Row Limit', 'Actions']}
+          data={filteredUsers}
+          emptyState={
+            <div className="text-center p-12 text-text-secondary bg-surface border border-[var(--color-muted)] rounded-[var(--radius-xl)]">
+              No users found.
+            </div>
+          }
+          renderRow={(u) => (
+            <>
+              <td className="px-5 py-3 whitespace-nowrap">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[var(--color-muted)] flex items-center justify-center text-text-secondary">
+                    <User className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-text-primary">{u.username}</div>
+                    <div className="text-[var(--text-caption)] text-text-secondary">{u.email}</div>
+                  </div>
+                </div>
+              </td>
+              <td className="px-5 py-3 whitespace-nowrap">
+                <Badge variant={getRoleVariant(u.role)}>
+                  {u.role?.toUpperCase()}
+                </Badge>
+              </td>
+              <td className="px-5 py-3 whitespace-nowrap">
+                {u.is_suspended ? (
+                  <Badge variant="default" className="text-text-muted">
+                    <span className="w-1.5 h-1.5 rounded-full bg-text-muted mr-1.5 inline-block"></span> Suspended
+                  </Badge>
+                ) : (
+                  <Badge variant="success">
+                    <span className="w-1.5 h-1.5 rounded-full bg-success mr-1.5 inline-block"></span> Active
+                  </Badge>
+                )}
+              </td>
+              <td className="px-5 py-3 whitespace-nowrap text-[var(--text-caption)] font-mono">
+                <div className="flex items-center gap-2">
+                  <input
+                    id={`limit-${u.id}`}
+                    className="w-16 bg-surface border border-[var(--color-muted)] rounded text-[var(--text-caption)] text-text-primary px-2 h-8 text-center focus:border-primary focus:ring-1 focus:ring-primary/40 focus:outline-none"
+                    type="number"
+                    defaultValue={u.row_limit}
+                    onChange={(e) => setRowLimitEditing((prev) => ({ ...prev, [u.id]: e.target.value }))}
+                  />
+                  {rowLimitEditing[u.id] !== undefined && (
+                    <Button size="sm" variant="secondary" onClick={() => handleSetRowLimit(u.id)}>
+                      Save
+                    </Button>
+                  )}
+                </div>
+              </td>
+              <td className="px-5 py-3 whitespace-nowrap">
+                <div className="flex items-center justify-end gap-2">
+                  <Button
+                    size="sm"
+                    variant={u.is_suspended ? 'outline' : 'ghost'}
+                    onClick={() => handleToggleSuspend(u.id)}
+                  >
+                    {u.is_suspended ? 'Activate' : 'Suspend'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-danger hover:text-white hover:bg-danger w-8 h-8 p-0 flex items-center justify-center shrink-0"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      openDeleteModal(u)
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </td>
+            </>
+          )}
+        />
+      )}
 
-      {/* ── Delete Confirmation Modal (Sliding Panel) ── */}
-      {deleteTarget && createPortal(
-        <div className="sliding-panel-overlay animate-in fade-in duration-300" onClick={closeDeleteModal}>
-          <div className="sliding-panel panel-enter" onClick={e => e.stopPropagation()}>
-            {/* Header */}
-            <div className="flex justify-between items-center px-xl py-lg border-b border-outline-variant/10">
-              <h2 className="font-h2 text-[20px] font-semibold text-error flex items-center gap-2">
-                <Trash2 size={20} /> Delete User
-              </h2>
-              <button
-                onClick={closeDeleteModal}
-                className="text-on-surface-variant hover:text-on-surface transition-colors rounded-full p-1 hover:bg-surface-variant"
-              >
-                <X size={20} />
-              </button>
+      {/* Delete Modal */}
+      <Modal
+        isOpen={!!deleteTarget}
+        onClose={closeDeleteModal}
+        title={
+          <span className="flex items-center gap-2 text-danger">
+            <ShieldAlert className="w-5 h-5" /> Delete User
+          </span>
+        }
+      >
+        {deleteTarget && (
+          <div className="flex flex-col gap-6">
+            <div className="bg-danger/10 border border-danger/20 p-4 rounded-[var(--radius-lg)] flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-danger shrink-0 mt-0.5" />
+              <span className="text-[var(--text-body)] text-danger leading-relaxed">
+                You are about to permanently delete this user. This will immediately terminate all active sessions and revoke all database permissions.
+              </span>
             </div>
 
-            {/* Body */}
-            <div className="p-xl flex-1 flex flex-col gap-lg overflow-y-auto">
-              {/* Warning banner */}
-              <div className="delete-warning-banner bg-error/10 border border-error/20 p-4 rounded-xl text-error flex items-start gap-3">
-                <AlertTriangle size={18} className="shrink-0 mt-0.5" />
-                <span className="text-[13px] leading-relaxed">
-                  You are about to permanently delete this user. This will immediately terminate all active sessions and revoke all database permissions.
-                </span>
+            <div className="bg-surface border border-[var(--color-muted)] p-4 rounded-[var(--radius-lg)] flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-[var(--color-muted)] flex items-center justify-center shrink-0">
+                <UserCog className="w-6 h-6 text-text-secondary" />
               </div>
-
-              <div className="delete-user-card bg-surface-container border border-outline-variant/10 p-4 rounded-xl flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center shrink-0">
-                  <UserCog size={20} className="text-on-surface-variant" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-semibold text-[15px] text-on-surface">{deleteTarget.username}</span>
-                  <span className="text-[13px] text-on-surface-variant">{deleteTarget.email}</span>
-                </div>
-                <div className="ml-auto">
-                  <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider ${
-                    deleteTarget.role === 'admin' ? 'bg-primary-container text-white' : 
-                    deleteTarget.role === 'dba' ? 'bg-secondary-fixed-dim/20 text-secondary-fixed-dim' : 
-                    'bg-surface-variant text-on-surface-variant'
-                  }`}>
-                    {deleteTarget.role}
-                  </span>
-                </div>
+              <div className="flex flex-col">
+                <span className="font-semibold text-text-primary">{deleteTarget.username}</span>
+                <span className="text-[var(--text-caption)] text-text-secondary">{deleteTarget.email}</span>
               </div>
-
-              <div className="space-y-3 mt-4">
-                <label className="block text-[14px] text-on-surface-variant">
-                  To confirm, type <span className="font-mono font-bold text-on-surface select-all bg-surface-variant px-1.5 py-0.5 rounded">{deleteTarget.username}</span>
-                </label>
-                <input
-                  type="text"
-                  className="panel-input"
-                  value={deleteConfirmText}
-                  onChange={(e) => setDeleteConfirmText(e.target.value)}
-                  placeholder={deleteTarget.username}
-                  disabled={deleting}
-                  autoComplete="off"
-                />
+              <div className="ml-auto">
+                <Badge variant={getRoleVariant(deleteTarget.role)}>{deleteTarget.role}</Badge>
               </div>
             </div>
 
-            <div className="p-xl border-t border-outline-variant/10 mt-auto flex justify-end gap-4">
-              <button
-                type="button"
-                className="px-6 py-3 font-medium text-on-surface hover:bg-surface-variant rounded-xl transition-colors"
-                onClick={closeDeleteModal}
+            <div className="space-y-3">
+              <label className="block text-[var(--text-body)] text-text-secondary">
+                To confirm, type <span className="font-mono font-bold text-text-primary select-all bg-[var(--color-muted)] px-2 py-0.5 rounded">{deleteTarget.username}</span>
+              </label>
+              <Input
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={deleteTarget.username}
                 disabled={deleting}
-              >
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 mt-2 border-t border-[var(--color-muted)] pt-6">
+              <Button variant="ghost" onClick={closeDeleteModal} disabled={deleting}>
                 Cancel
-              </button>
-              <button
-                type="button"
-                className="btn-delete-confirm flex items-center gap-2 px-6 py-3 bg-error/10 text-error hover:bg-error hover:text-white rounded-xl font-medium transition-all disabled:opacity-50 disabled:hover:bg-error/10 disabled:hover:text-error"
+              </Button>
+              <Button
+                variant="danger"
                 disabled={deleteConfirmText !== deleteTarget.username || deleting}
                 onClick={handleDeleteUser}
+                isLoading={deleting}
               >
-                {deleting ? (
-                  <><div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> Deleting...</>
-                ) : (
-                  <><Trash2 size={18} /> Delete User</>
-                )}
-              </button>
+                Delete User
+              </Button>
             </div>
           </div>
-        </div>,
-        document.body
-      )}
+        )}
+      </Modal>
 
-      {/* ── Create User Modal (Sliding Panel) ── */}
-      {showCreateModal && createPortal(
-        <div className="sliding-panel-overlay animate-in fade-in duration-300" onClick={() => {
-          if (creating) return;
-          setShowCreateModal(false);
-          setNewUser({ username: '', email: '', role: 'user' });
-        }}>
-          <div className="sliding-panel panel-enter" onClick={e => e.stopPropagation()}>
-            {!tempPassword ? (
-              <>
-                <div className="flex justify-between items-center px-xl py-lg border-b border-outline-variant/10">
-                  <h2 className="font-h2 text-[20px] font-semibold text-on-surface flex items-center gap-2">
-                    <UserPlus size={20} />
-                    Create New User
-                  </h2>
-                  <button
-                    onClick={() => {
-                      setShowCreateModal(false)
-                      setNewUser({ username: '', email: '', role: 'user' })
-                    }}
-                    className="text-on-surface-variant hover:text-on-surface transition-colors rounded-full p-2 hover:bg-surface-variant"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
+      {/* Create User Modal */}
+      <Modal
+        isOpen={showCreateModal}
+        onClose={closeCreateModalAndReset}
+        title={!tempPassword ? "Create New User" : "User Created"}
+      >
+        {!tempPassword ? (
+          <form onSubmit={handleCreateUser} className="flex flex-col gap-6">
+            <Input
+              label="Username"
+              value={newUser.username}
+              onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+              required
+            />
+            <Input
+              label="Email"
+              type="email"
+              value={newUser.email}
+              onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+              required
+            />
 
-                <form onSubmit={handleCreateUser} className="flex-1 flex flex-col overflow-y-auto">
-                  <div className="p-xl flex flex-col gap-lg flex-1">
-                    <div className="flex flex-col gap-sm">
-                      <label className="text-[13px] text-on-surface-variant">Username</label>
-                      <input
-                        className="panel-input"
-                        type="text"
-                        value={newUser.username}
-                        onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="flex flex-col gap-sm">
-                      <label className="text-[13px] text-on-surface-variant">Email</label>
-                      <input
-                        className="panel-input"
-                        type="email"
-                        value={newUser.email}
-                        onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="flex flex-col gap-sm">
-                      <label className="text-[13px] text-on-surface-variant">Role</label>
-                      <select
-                        className="panel-input appearance-none"
-                        style={{ backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>')`, backgroundPosition: 'right 16px center', backgroundRepeat: 'no-repeat' }}
-                        value={newUser.role}
-                        onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-                      >
-                        <option value="user">User</option>
-                        <option value="dba">DBA</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[var(--text-caption)] font-medium text-text-secondary">Role</label>
+              <select
+                className="w-full bg-surface border border-[var(--color-muted)] rounded-[var(--radius-md)] px-4 py-2.5 text-[var(--text-body)] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all duration-[var(--motion-fast)]"
+                value={newUser.role}
+                onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+              >
+                <option value="user">User</option>
+                <option value="dba">DBA</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
 
-                    <div className="create-user-notice bg-surface-variant/50 border border-outline-variant/10 p-4 rounded-xl mt-4 flex items-start gap-3">
-                      <span className="text-[16px]">🔒</span>
-                      <span className="text-[13px] text-on-surface-variant leading-relaxed">
-                        A secure one-time password will be generated automatically.
-                        The user must change it on first login.
-                      </span>
-                    </div>
-                  </div>
+            <div className="bg-surface border border-[var(--color-muted)] p-4 rounded-[var(--radius-lg)] mt-2 flex items-start gap-3">
+              <span className="text-xl leading-none">🔒</span>
+              <span className="text-[var(--text-caption)] text-text-secondary leading-relaxed">
+                A secure one-time password will be generated automatically.
+                The user must change it on first login.
+              </span>
+            </div>
 
-                  <div className="p-xl border-t border-outline-variant/10 flex justify-end gap-4 mt-auto">
-                    <button
-                      type="button"
-                      className="px-6 py-3 font-medium text-on-surface hover:bg-surface-variant rounded-xl transition-colors"
-                      onClick={() => {
-                        setShowCreateModal(false)
-                        setNewUser({ username: '', email: '', role: 'user' })
-                      }}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="bg-primary-container text-white px-6 py-3 rounded-xl font-medium hover:bg-inverse-primary transition-all disabled:opacity-50"
-                      disabled={creating}
-                    >
-                      {creating ? 'Creating...' : 'Create User'}
-                    </button>
-                  </div>
-                </form>
-              </>
-            ) : (
-              <>
-                <div className="flex justify-between items-center px-xl py-lg border-b border-outline-variant/10">
-                  <h2 className="font-h2 text-[20px] font-semibold text-success flex items-center gap-2">
-                    <CheckCircle2 size={24} /> User Created
-                  </h2>
-                  <button
-                    onClick={() => {
-                      setShowCreateModal(false)
-                      setTempPassword(null)
-                      setCreatedUserId(null)
-                      setCredentialsSent(false)
-                      setNewUser({ username: '', email: '', role: 'user' })
-                    }}
-                    className="text-on-surface-variant hover:text-on-surface transition-colors rounded-full p-2 hover:bg-surface-variant"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
+            <div className="flex justify-end gap-3 pt-6 border-t border-[var(--color-muted)] mt-2">
+              <Button variant="ghost" onClick={closeCreateModalAndReset} type="button">
+                Cancel
+              </Button>
+              <Button variant="primary" type="submit" isLoading={creating}>
+                Create User
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <div className="flex flex-col gap-6">
+            <div className="bg-surface border border-[var(--color-muted)] p-6 rounded-[var(--radius-lg)] text-center">
+              <p className="text-[var(--text-body)] text-text-secondary mb-4">
+                🔑 One-Time Password for <strong className="text-text-primary">{newUser.username}</strong>
+              </p>
+              <div className="font-mono text-[var(--text-section)] font-bold text-text-primary bg-[var(--color-muted)] py-4 rounded-[var(--radius-md)] mb-6 select-all">
+                {tempPassword}
+              </div>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  navigator.clipboard.writeText(tempPassword)
+                  toast.success('Copied to clipboard!')
+                }}
+              >
+                📋 Copy Password
+              </Button>
+            </div>
 
-                <div className="p-xl flex-1 overflow-y-auto flex flex-col gap-lg">
-                  <div className="temp-password-box">
-                    <p className="temp-password-label">
-                      🔑 One-Time Password for <strong className="text-on-surface">{newUser.username}</strong>
-                    </p>
-                    <div className="temp-password-value">
-                      {tempPassword}
-                    </div>
-                    <button
-                      className="btn-copy"
-                      onClick={() => {
-                        navigator.clipboard.writeText(tempPassword)
-                        toast.success('Copied to clipboard!')
-                      }}
-                    >
-                      📋 Copy Password
-                    </button>
-                  </div>
+            <div className="bg-warning/10 border border-warning/20 p-4 rounded-[var(--radius-lg)] flex items-start gap-3">
+              <span className="text-xl leading-none text-warning">⚠</span>
+              <span className="text-[var(--text-caption)] text-warning leading-relaxed">
+                This password is shown <strong>only once</strong> and cannot be recovered.
+                Share it securely with the user.
+              </span>
+            </div>
 
-                  <div className="bg-warning/10 border border-warning/20 p-4 rounded-xl flex items-start gap-3 mt-4">
-                    <span className="text-[16px]">⚠</span>
-                    <span className="text-[13px] text-warning leading-relaxed">
-                      This password is shown <strong>only once</strong> and cannot be recovered.
-                      Share it securely with the user. They will be required to change it on first login.
-                    </span>
-                  </div>
-                </div>
+            <div className="flex gap-4 pt-6 border-t border-[var(--color-muted)] mt-2">
+              <Button
+                variant={credentialsSent ? 'outline' : 'secondary'}
+                className="flex-1"
+                onClick={handleSendCredentials}
+                disabled={sendingEmail || credentialsSent}
+                isLoading={sendingEmail}
+              >
+                {credentialsSent ? '✔ Credentials Sent' : '✉ Send via Email'}
+              </Button>
 
-                <div className="p-xl border-t border-outline-variant/10 flex justify-between items-center gap-4 mt-auto">
-                  <button
-                    type="button"
-                    className={`flex items-center justify-center gap-2 flex-1 py-3 font-medium rounded-xl border transition-all ${
-                      credentialsSent
-                        ? 'border-secondary-fixed-dim/40 text-secondary-fixed-dim bg-secondary-fixed-dim/10 cursor-default'
-                        : 'border-secondary/30 text-secondary hover:bg-secondary/10'
-                    }`}
-                    onClick={handleSendCredentials}
-                    disabled={sendingEmail || credentialsSent}
-                  >
-                    {sendingEmail ? (
-                      <><div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> Sending...</>
-                    ) : credentialsSent ? (
-                      <><CheckCircle2 size={16} /> Credentials Sent!</>
-                    ) : (
-                      <>✉ Send via Email</>
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    className="bg-primary-container text-white px-8 py-3 rounded-xl font-medium hover:bg-inverse-primary transition-colors flex-1"
-                    onClick={() => {
-                      setShowCreateModal(false)
-                      setTempPassword(null)
-                      setCreatedUserId(null)
-                      setCredentialsSent(false)
-                      setNewUser({ username: '', email: '', role: 'user' })
-                    }}
-                  >
-                    Done
-                  </button>
-                </div>
-              </>
-            )}
+              <Button
+                variant="primary"
+                className="flex-1"
+                onClick={closeCreateModalAndReset}
+              >
+                Done
+              </Button>
+            </div>
           </div>
-        </div>,
-        document.body
-      )}
+        )}
+      </Modal>
     </div>
   )
 }
