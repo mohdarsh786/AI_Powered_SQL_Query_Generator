@@ -85,6 +85,9 @@ const execute = async (req, res, next) => {
     let finalQuery = query.trim();
     const parsed = req.parsedQuery || parseQuery(finalQuery);
 
+    // Strip trailing semicolons and whitespace
+    finalQuery = finalQuery.replace(/;+\s*$/, '').trim();
+
     // Row limit injection for 'user' role on SELECT queries
     if (user.role === 'user' && parsed.operation === 'select') {
       const rowLimit = user.row_limit || 500;
@@ -92,13 +95,12 @@ const execute = async (req, res, next) => {
 
       // Only append LIMIT if not already present
       if (!upperQuery.includes('LIMIT')) {
-        // Remove trailing semicolon if present before appending LIMIT
-        if (finalQuery.endsWith(';')) {
-          finalQuery = finalQuery.slice(0, -1).trim();
-        }
         finalQuery += ` LIMIT ${rowLimit}`;
       }
     }
+
+    // Ensure no trailing semicolon remains before RPC execution
+    finalQuery = finalQuery.replace(/;+\s*$/, '').trim();
 
     // Execute the query via Supabase's raw SQL execution
     const startTime = Date.now();

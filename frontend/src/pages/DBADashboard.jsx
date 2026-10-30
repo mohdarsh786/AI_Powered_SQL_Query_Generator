@@ -350,7 +350,6 @@ export default function DBADashboard() {
       })
       setResultsError(null)
       fetchHistory()
-      fetchSessions()
     } catch (err) {
       const msg = err.response?.data?.error || 'Query execution failed'
       if (err.response?.status === 403) {

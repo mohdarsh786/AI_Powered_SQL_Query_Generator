@@ -73,7 +73,7 @@ export default function ChangePassword() {
         {/* Header */}
         <div className="cp-header">
           <div className="cp-icon">
-            <ShieldCheck size={28} color="var(--accent-emerald)" />
+            <ShieldCheck size={28} color="var(--accent-emerald, #10b981)" />
           </div>
           <h2>Set Your Password</h2>
           <p>

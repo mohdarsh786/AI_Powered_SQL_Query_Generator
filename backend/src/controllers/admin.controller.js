@@ -8,16 +8,25 @@ const { getAuditLogs } = require('../services/audit.service');
 const { grantPermission, revokePermission } = require('../services/permission.service');
 const { sendTempPasswordEmail } = require('../services/email.service');
 
+const isPlatformAdmin = (user) => {
+  return user?.username === 'admin_sarah' || user?.id === 1;
+};
+
 /**
  * GET /api/admin/users
- * Lists all users with their roles and suspension status. */
+ * Lists users. Platform admin sees all users; org admins see their org's users. */
 const listUsers = async (req, res, next) => {
   try {
-    const { data: users, error } = await supabase
+    let query = supabase
       .from('app_users')
-      .select('id, username, email, role, is_suspended, row_limit, created_at')
-      .eq('org_id', req.user.orgId)
+      .select('id, username, email, role, is_suspended, row_limit, created_at, org_id')
       .order('created_at', { ascending: true });
+
+    if (!isPlatformAdmin(req.user)) {
+      query = query.eq('org_id', req.user.orgId);
+    }
+
+    const { data: users, error } = await query;
 
     if (error) {
       return res.status(500).json({ error: 'Failed to fetch users.' });
@@ -138,8 +147,8 @@ const deleteUser = async (req, res, next) => {
       return res.status(404).json({ error: 'User not found.' });
     }
 
-    // Ensure user belongs to same org
-    if (user.org_id !== req.user.orgId) {
+    // Ensure user belongs to same org (unless platform admin)
+    if (!isPlatformAdmin(req.user) && user.org_id && user.org_id !== req.user.orgId) {
       return res.status(403).json({ error: 'Not authorized to delete this user.' });
     }
 
@@ -193,8 +202,8 @@ const toggleSuspend = async (req, res, next) => {
       return res.status(404).json({ error: 'User not found.' });
     }
 
-    // Ensure user belongs to same org
-    if (user.org_id !== req.user.orgId) {
+    // Ensure user belongs to same org (unless platform admin)
+    if (!isPlatformAdmin(req.user) && user.org_id && user.org_id !== req.user.orgId) {
       return res.status(403).json({ error: 'Not authorized to manage this user.' });
     }
 
@@ -329,28 +338,39 @@ const setRowLimit = async (req, res, next) => {
  */
 const getStats = async (req, res, next) => {
   try {
+    const isPlatform = isPlatformAdmin(req.user);
+
     // 1. Total users
-    const { count: usersCount, error: usersError } = await supabase
+    let usersQuery = supabase
       .from('app_users')
-      .select('id', { count: 'exact', head: true })
-      .eq('org_id', req.user.orgId);
+      .select('id', { count: 'exact', head: true });
+    if (!isPlatform) {
+      usersQuery = usersQuery.eq('org_id', req.user.orgId);
+    }
+    const { count: usersCount, error: usersError } = await usersQuery;
 
     // 2. Queries today
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
-    const { count: queriesCount, error: queriesError } = await supabase
+    let queriesQuery = supabase
       .from('audit_logs')
       .select('id', { count: 'exact', head: true })
-      .eq('org_id', req.user.orgId)
       .gte('created_at', startOfDay.toISOString());
+    if (!isPlatform) {
+      queriesQuery = queriesQuery.eq('org_id', req.user.orgId);
+    }
+    const { count: queriesCount, error: queriesError } = await queriesQuery;
 
     // 3. Flagged ops (failed or unauthorized)
-    const { count: flaggedCount, error: flaggedError } = await supabase
+    let flaggedQuery = supabase
       .from('audit_logs')
       .select('id', { count: 'exact', head: true })
-      .eq('org_id', req.user.orgId)
       .not('reason', 'is', null);
+    if (!isPlatform) {
+      flaggedQuery = flaggedQuery.eq('org_id', req.user.orgId);
+    }
+    const { count: flaggedCount, error: flaggedError } = await flaggedQuery;
 
     if (usersError || queriesError || flaggedError) {
       return res.status(500).json({ error: 'Failed to fetch cluster stats.' });
@@ -396,8 +416,8 @@ const sendCredentials = async (req, res, next) => {
       return res.status(404).json({ error: 'User not found.' });
     }
 
-    // Ensure user belongs to the same org as the requesting admin
-    if (user.org_id !== req.user.orgId) {
+    // Ensure user belongs to the same org as the requesting admin (unless platform admin)
+    if (!isPlatformAdmin(req.user) && user.org_id && user.org_id !== req.user.orgId) {
       return res.status(403).json({ error: 'Not authorized to send credentials for this user.' });
     }
 
