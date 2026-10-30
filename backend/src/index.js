@@ -25,10 +25,32 @@ const app = express();
 // 1. Helmet: sets various HTTP headers for security
 app.use(helmet());
 
-// 2. CORS: whitelist only the frontend URL
+// 2. CORS: whitelist frontend URLs including Vercel and localhost
+const configuredOrigins = (env.frontendUrl || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+const allowedOrigins = [
+  ...configuredOrigins,
+  'https://sql-assistant-eight.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000',
+];
+
 app.use(
   cors({
-    origin: env.frontendUrl,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (
+        allowedOrigins.includes(origin) ||
+        env.frontendUrl === '*' ||
+        origin.endsWith('.vercel.app')
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, false);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

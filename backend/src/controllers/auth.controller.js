@@ -10,18 +10,20 @@ const env = require('../config/env');
 const sessionEvents = require('../services/sessionEvents');
 const { generateOTP, sendOTPEmail, sendWelcomeEmail, sendPasswordResetEmail } = require('../services/email.service');
 
+const isProduction = env.nodeEnv === 'production' || process.env.RENDER === 'true';
+
 const cookieOptions = {
   httpOnly: true,
-  secure: env.nodeEnv === 'production',
-  sameSite: env.nodeEnv === 'production' ? 'none' : 'lax',
+  secure: isProduction,
+  sameSite: isProduction ? 'none' : 'lax',
   maxAge: 7 * 24 * 60 * 60 * 1000,
   path: '/'
 };
 
 const tempCookieOptions = {
   httpOnly: true,
-  secure: env.nodeEnv === 'production',
-  sameSite: env.nodeEnv === 'production' ? 'none' : 'lax',
+  secure: isProduction,
+  sameSite: isProduction ? 'none' : 'lax',
   maxAge: 15 * 60 * 1000,
   path: '/'
 };
@@ -137,15 +139,15 @@ const logout = async (req, res, next) => {
 
     res.clearCookie('token', {
       httpOnly: true,
-      secure: env.nodeEnv === 'production',
-      sameSite: env.nodeEnv === 'production' ? 'none' : 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       path: '/',
     });
     
     res.clearCookie('session_id', {
       httpOnly: true,
-      secure: env.nodeEnv === 'production',
-      sameSite: env.nodeEnv === 'production' ? 'none' : 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       path: '/',
     });
 
